@@ -1,0 +1,4 @@
+.env
+captcha_*.png
+debug_calendar_*.png
+reservation_result_*.txt

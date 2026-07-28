@@ -12,10 +12,10 @@ john의 첫번째 프로젝트 - 프롬프트
 
 node tennis_checker.js
 
-아래의 절차로 화성특례시 통합예약시스템 테니스코트 예약 프로그램 만들어줘
+아래의 절차로 화성특례시 통합예약시스템 테니스코트 예약 프로그램 만들어줘 - 프롬프트
 1) https://yeyak.hscity.go.kr/indexIntro.do 접속
 2) https://yeyak.hscity.go.kr/memberLogin.do 로그인 화면 이동
-3) id, pw 로그인
+3) id: unipro87, pw: dksghgus88! 로그인
 4) 체육시설, 화성도시공사 선택
 5) 동탄9동 선택
 6) 왕배산체육공원 테니스장 1번~8번 코트 선택
