@@ -23,15 +23,28 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 CHUNK_SIZE = 180  # 카카오 기본 텍스트 템플릿 글자 제한(약 200자)보다 여유를 둔 값
 
 
-def load_dotenv(path: Path) -> None:
-    if not path.exists():
-        return
-    for line in path.read_text(encoding="utf-8").splitlines():
+def _apply_env_lines(text: str) -> None:
+    for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        key = key.strip()
+        # GitHub Actions는 존재하지 않는 secret을 참조해도 env var를 "설정 안 함"이 아니라
+        # 빈 문자열로 만들어버리므로, setdefault가 아니라 "비어있으면 채운다"로 판단한다.
+        if not os.environ.get(key):
+            os.environ[key] = value.strip().strip('"').strip("'")
+
+
+def load_dotenv(path: Path) -> None:
+    if path.exists():
+        _apply_env_lines(path.read_text(encoding="utf-8"))
+
+    # GitHub Actions secret으로 KAKAO_REST_API_KEY 등을 개별 등록하는 대신, .env와 같은
+    # KEY=VALUE 여러 줄을 통째로 하나의 KAKAO_DATA secret에 붙여넣은 경우를 위한 대비.
+    kakao_data = os.environ.get("KAKAO_DATA")
+    if kakao_data:
+        _apply_env_lines(kakao_data)
 
 
 def refresh_access_token(rest_api_key: str, refresh_token: str) -> str:
