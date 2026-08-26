@@ -1,9 +1,10 @@
 name: 경제뉴스 카톡 요약
 
 on:
-  schedule:
-    # 매일 23:50 UTC = 08:50 KST
-    - cron: "50 23 * * *"
+  # 매일 자동 발송은 중지함 (사용자 요청, 2026-08-27). 필요하면 아래 schedule 블록의
+  # 주석을 풀어 재개하거나, Actions 탭에서 workflow_dispatch로 수동 실행 가능.
+  # schedule:
+  #   - cron: "50 23 * * *"  # 매일 23:50 UTC = 08:50 KST
   workflow_dispatch: {}
 
 jobs:
@@ -25,4 +26,5 @@ jobs:
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_DATA: ${{ secrets.KAKAO_DATA }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python daily_news_kakao.py

@@ -1,16 +1,17 @@
 # 경제뉴스 카톡 요약 봇
 
-매일 아침 국내+해외 경제뉴스 헤드라인 50개(RSS 기반, 국내는 한국어 원문/해외는 영어 원문)를
-모아서 카카오톡 "나에게 보내기"로 보내는 자동화.
-(헤드라인이 많아 한 번에 약 20개 안팎의 카톡 메시지로 나눠서 도착합니다.)
+매일 아침 국내 경제뉴스 RSS(최대 50건)를 모은 뒤, 그중 가장 중요한 뉴스 10건을 Claude API로
+쉽게 풀어 요약해서 카카오톡 "나에게 보내기"로 보내는 자동화.
 
 ## 구조
 
 - **GitHub Actions**(`.github/workflows/daily_news_kakao.yml`)가 매일 23:50 UTC(08:50 KST)에
   `daily_news_kakao.py`를 실행합니다. PC가 꺼져 있어도 동작합니다.
-- `daily_news_kakao.py` — RSS 피드(연합뉴스/한국경제/조선비즈/뉴시스/아시아경제 + CNBC/BBC/FT/
-  MarketWatch/Investing.com)에서 헤드라인을 모으고, `send_kakao.py`의 전송 로직을 그대로 불러와
-  카카오톡으로 보냅니다. 외부 패키지 설치 없이 표준 라이브러리만 사용합니다.
+- `daily_news_kakao.py` — 국내 RSS 피드(연합뉴스/한국경제/한국경제(증권)/조선비즈/뉴시스/아시아경제)에서
+  헤드라인+설명(description)을 모으고, Claude API(REST 직접 호출)에 넘겨 그중 주요 뉴스
+  10건을 골라 쉬운 말로 요약한 뒤 `send_kakao.py`의 전송 로직으로 카카오톡으로 보냅니다.
+  외부 패키지 설치 없이 표준 라이브러리만 사용합니다(feedparser, anthropic SDK 등 불필요 —
+  Claude API도 urllib으로 직접 호출).
   - `python daily_news_kakao.py --dry-run` — 전송 없이 결과 텍스트만 로컬에서 확인
   - `python daily_news_kakao.py` — 실제 전송까지 로컬에서 테스트
 - `send_kakao.py` — 임의의 텍스트를 카카오톡으로 전송하는 저수준 스크립트(`python send_kakao.py "텍스트"`).
@@ -27,12 +28,13 @@
 
 1. `python kakao_get_token.py` 실행 → 브라우저에서 카카오 로그인/동의 → 출력된
    `KAKAO_REST_API_KEY`, `KAKAO_REFRESH_TOKEN` 값을 `.env`에 저장 (`.env.example` 참고, 로컬 테스트용).
-2. 로컬 테스트: `python daily_news_kakao.py --dry-run` 으로 결과 확인 후, `python daily_news_kakao.py`
+2. console.anthropic.com 에서 발급받은 API 키를 `.env`의 `ANTHROPIC_API_KEY`에 저장.
+3. 로컬 테스트: `python daily_news_kakao.py --dry-run` 으로 결과 확인 후, `python daily_news_kakao.py`
    로 실제 전송까지 확인.
-3. GitHub repo Settings → Secrets and variables → Actions 에서 아래 3개 secret을 등록:
-   `KAKAO_REST_API_KEY`, `KAKAO_REFRESH_TOKEN`, `KAKAO_CLIENT_SECRET`
+4. GitHub repo Settings → Secrets and variables → Actions 에서 아래 4개 secret을 등록:
+   `KAKAO_REST_API_KEY`, `KAKAO_REFRESH_TOKEN`, `KAKAO_CLIENT_SECRET`, `ANTHROPIC_API_KEY`
    (https://github.com/unipro8787/john_dev/settings/secrets/actions)
-4. Actions 탭에서 "경제뉴스 카톡 요약" 워크플로우를 `workflow_dispatch`로 한 번 수동 실행해서
+5. Actions 탭에서 "경제뉴스 카톡 요약" 워크플로우를 `workflow_dispatch`로 한 번 수동 실행해서
    정상 동작하는지 확인.
 
 ## 참고
