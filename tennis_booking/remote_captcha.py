@@ -29,7 +29,7 @@ PAGE_TEMPLATE = """<!doctype html>
 <img src="/captcha_image/{token}?v={version}" style="max-width:90%; border:1px solid #ccc; border-radius:4px;"/>
 <form method="POST" action="/submit/{token}">
   <div style="margin-top:20px;">
-    <input name="code" autocomplete="off" autofocus
+    <input name="code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus
            style="font-size:22px; padding:10px; width:60%; text-align:center;"/>
   </div>
   <button type="submit" style="font-size:18px; padding:12px 28px; margin-top:16px;">입력 완료</button>

@@ -5,11 +5,14 @@
 #
 # 사용법: python remote_launcher.py  (Ctrl+C로 종료)
 
+import calendar
+import hashlib
 import os
 import queue
 import secrets
 import threading
 import time
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -19,6 +22,10 @@ from pyngrok import ngrok
 import book_court
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+ICON_BYTES = (SCRIPT_DIR / "icon.png").read_bytes()
+# 아이콘 내용이 바뀔 때마다 값이 달라져서, 아이폰/사파리가 이전 아이콘 이미지를 계속 캐싱해
+# "고쳤는데도 안 바뀐다"는 문제가 생기지 않도록 URL 자체를 매번 새로 만든다.
+ICON_VERSION = hashlib.md5(ICON_BYTES).hexdigest()[:8]
 
 # 폰에서 손으로 옮겨 적어도 헷갈리지 않도록 0/O, 1/l/I처럼 헷갈리는 문자를 뺀 알파벳.
 _TOKEN_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz"
@@ -27,23 +34,157 @@ _TOKEN_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz"
 def _make_token(length: int = 10) -> str:
     return "".join(secrets.choice(_TOKEN_ALPHABET) for _ in range(length))
 
+
+_TOKEN_FILE = SCRIPT_DIR / ".remote_token"
+
+
+def _load_or_create_token() -> str:
+    # 폰 홈 화면에 추가한 아이콘의 주소(도메인/토큰)가 재시작할 때마다 안 바뀌도록,
+    # 한 번 만든 토큰을 파일에 저장해두고 다음 실행부터는 그대로 재사용한다.
+    if _TOKEN_FILE.exists():
+        saved = _TOKEN_FILE.read_text(encoding="utf-8").strip()
+        if saved:
+            return saved
+    token = _make_token()
+    _TOKEN_FILE.write_text(token, encoding="utf-8")
+    return token
+
+
+def _render_time_options(selected: str | None = None) -> str:
+    return "".join(
+        f'<option value="{opt}"{" selected" if opt == selected else ""}>{opt}</option>'
+        for opt in book_court.TIME_SLOTS
+    )
+
+
+def _default_target_slots() -> list[tuple[datetime, str]]:
+    # 대기 화면을 열 때마다 "오늘 기준 다음달의 매주 토요일 06:00~08:00"을 새로 계산해 기본값으로 채운다.
+    today = datetime.now()
+    year, month = (today.year, today.month + 1) if today.month < 12 else (today.year + 1, 1)
+    days_in_month = calendar.monthrange(year, month)[1]
+    return [
+        (datetime(year, month, day), "06:00~08:00")
+        for day in range(1, days_in_month + 1)
+        if datetime(year, month, day).weekday() == 5  # 5 = 토요일
+    ]
+
+
+# 3, 4번은 book_court.SKIP_COURTS(사용수익허가 코트)라 애초에 선택지에도 넣지 않는다.
+_SELECTABLE_COURTS = [c for c in sorted(book_court.COURTS) if c not in book_court.SKIP_COURTS]
+
+
+def _render_court_checkboxes(selected: list[int]) -> str:
+    return "".join(
+        f'<label style="display:inline-block; margin:4px 8px; font-size:16px;">'
+        f'<input type="checkbox" name="court" value="{c}"{" checked" if c in selected else ""}> {c}번</label>'
+        for c in _SELECTABLE_COURTS
+    )
+
+
+def _parse_courts_from_body(body: str) -> list[int]:
+    parsed = parse_qs(body)
+    courts = []
+    for value in parsed.get("court", []):
+        try:
+            court_num = int(value)
+        except ValueError:
+            continue
+        if court_num in _SELECTABLE_COURTS:
+            courts.append(court_num)
+    return courts
+
+
+def _render_slot_rows(slots: list[tuple[datetime, str]]) -> str:
+    if not slots:
+        slots = [(None, book_court.TIME_SLOTS[0])]
+    rows = []
+    for target_date, time_label in slots:
+        date_val = target_date.strftime("%Y-%m-%d") if target_date else ""
+        rows.append(
+            '<div class="slot-row" style="margin:8px 0; display:flex; gap:8px; '
+            'justify-content:center; align-items:center;">'
+            f'<input type="date" name="date" required value="{date_val}" '
+            'style="font-size:16px; padding:6px;">'
+            f'<select name="time" required style="font-size:16px; padding:6px;">'
+            f'{_render_time_options(time_label)}</select>'
+            '<button type="button" onclick="removeSlot(this)" style="padding:6px 10px;">삭제</button>'
+            "</div>"
+        )
+    return "\n".join(rows)
+
+
+def _parse_slots_from_body(body: str) -> list[tuple[datetime, str]]:
+    parsed = parse_qs(body)
+    dates = parsed.get("date", [])
+    times = parsed.get("time", [])
+    slots: list[tuple[datetime, str]] = []
+    for date_str, time_label in zip(dates, times):
+        date_str = date_str.strip()
+        if not date_str or time_label not in book_court.TIME_SLOTS:
+            continue
+        try:
+            slots.append((datetime.strptime(date_str, "%Y-%m-%d"), time_label))
+        except ValueError:
+            continue
+    return slots
+
+HOME_SCREEN_HEAD = f"""
+<link rel="apple-touch-icon" href="/icon.png?v={ICON_VERSION}">
+<link rel="icon" href="/icon.png?v={ICON_VERSION}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="테니스 예약">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#178246">
+"""
+
 IDLE_PAGE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+""" + HOME_SCREEN_HEAD + """
 <title>테니스 예약 원격 실행</title></head>
 <body style="font-family:sans-serif; text-align:center; padding:24px;">
 <h3>테니스 예약 원격 실행</h3>
-<p>{target_slots}</p>
 <form method="POST" action="/run/{token}">
-  <button type="submit" style="font-size:20px; padding:16px 32px;">지금 예약 시도 시작</button>
+  <div id="slots">
+{slot_rows}
+  </div>
+  <button type="button" onclick="addSlot()" style="font-size:14px; padding:8px 16px; margin-top:8px;">+ 날짜/시간 추가</button>
+  <div style="margin-top:20px;">
+    <div style="font-size:14px; color:#555;">시도할 코트</div>
+    <div>{court_checkboxes}</div>
+  </div>
+  <div style="margin-top:20px;">
+    <button type="submit" style="font-size:20px; padding:16px 32px;">지금 예약 시도 시작</button>
+  </div>
 </form>
 {last_result_block}
+<template id="slot-template">
+  <div class="slot-row" style="margin:8px 0; display:flex; gap:8px; justify-content:center; align-items:center;">
+    <input type="date" name="date" required style="font-size:16px; padding:6px;">
+    <select name="time" required style="font-size:16px; padding:6px;">{time_options}</select>
+    <button type="button" onclick="removeSlot(this)" style="padding:6px 10px;">삭제</button>
+  </div>
+</template>
+<script>
+function addSlot() {{
+  const tpl = document.getElementById('slot-template');
+  document.getElementById('slots').appendChild(tpl.content.cloneNode(true));
+}}
+function removeSlot(btn) {{
+  const rows = document.querySelectorAll('#slots .slot-row');
+  if (rows.length > 1) {{
+    btn.closest('.slot-row').remove();
+  }}
+}}
+</script>
 </body></html>"""
 
 RUNNING_PAGE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="3">
+""" + HOME_SCREEN_HEAD + """
 <title>테니스 예약 실행 중</title></head>
 <body style="font-family:sans-serif; text-align:center; padding:24px;">
 <h3>예약 시도 실행 중...</h3>
@@ -53,13 +194,14 @@ RUNNING_PAGE = """<!doctype html>
 CAPTCHA_PAGE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+""" + HOME_SCREEN_HEAD + """
 <title>보안문자 입력</title></head>
 <body style="font-family:sans-serif; text-align:center; padding:24px;">
 <h3>테니스 예약 - 보안문자 입력</h3>
 <img src="/captcha_image/{token}?v={version}" style="max-width:90%; border:1px solid #ccc; border-radius:4px;"/>
 <form method="POST" action="/submit/{token}">
   <div style="margin-top:20px;">
-    <input name="code" autocomplete="off" autofocus
+    <input name="code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus
            style="font-size:22px; padding:10px; width:60%; text-align:center;"/>
   </div>
   <button type="submit" style="font-size:18px; padding:12px 28px; margin-top:16px;">입력 완료</button>
@@ -75,7 +217,7 @@ class LauncherServer:
     def __init__(self, config: dict, port: int):
         self.config = config
         self.port = port
-        self.token = _make_token()
+        self.token = _load_or_create_token()
         self.result_queue: "queue.Queue[tuple[str, str]]" = queue.Queue()
         self._lock = threading.Lock()
         self.state = "idle"  # idle | running | waiting_captcha
@@ -105,6 +247,8 @@ class LauncherServer:
                 path_only = urlsplit(self.path).path
                 if path_only == f"/{server.token}":
                     self._send(200, server._render_home().encode("utf-8"), "text/html; charset=utf-8")
+                elif path_only == "/icon.png":
+                    self._send(200, ICON_BYTES, "image/png")
                 elif path_only == f"/captcha_image/{server.token}":
                     with server._lock:
                         data = server._image_bytes
@@ -125,7 +269,11 @@ class LauncherServer:
 
             def do_POST(self):  # noqa: N802
                 if self.path == f"/run/{server.token}":
-                    server.start_run()
+                    length = int(self.headers.get("Content-Length", 0))
+                    body = self.rfile.read(length).decode("utf-8") if length else ""
+                    target_slots = _parse_slots_from_body(body)
+                    court_order = _parse_courts_from_body(body)
+                    server.start_run(target_slots or None, court_order or None)
                     self._redirect_home()
                 elif self.path == f"/submit/{server.token}":
                     length = int(self.headers.get("Content-Length", 0))
@@ -159,10 +307,19 @@ class LauncherServer:
         return f"{public_base.rstrip('/')}/captcha_image/{self.token}"
 
     # --- 원격 실행 트리거 ---
-    def start_run(self) -> bool:
+    def start_run(self, target_slots: list[tuple[datetime, str]] | None = None,
+                  court_order: list[int] | None = None) -> bool:
         with self._lock:
             if self.state != "idle":
                 return False
+            if target_slots:
+                # 폰에서 고른 날짜/시간이 있으면 그걸로 이번 실행부터 사용하고,
+                # 다음에 페이지를 다시 열었을 때도 기본값으로 그대로 보이게 남겨둔다.
+                self.config["target_slots"] = target_slots
+            if court_order:
+                # 폰에서 고른 코트가 있으면 그걸로 이번 실행부터 사용하고, 다음에 페이지를
+                # 다시 열었을 때도 체크박스 상태로 그대로 보이게 남겨둔다.
+                self.config["court_order"] = court_order
             self.state = "running"
         threading.Thread(target=self._run_job, daemon=True).start()
         return True
@@ -197,10 +354,11 @@ class LauncherServer:
                 '<pre style="text-align:left; white-space:pre-wrap; '
                 f'background:#f5f5f5; padding:12px;">{head}</pre>'
             )
-        slots_desc = ", ".join(f"{d.strftime('%Y-%m-%d')} {t}" for d, t in self.config["target_slots"])
         return IDLE_PAGE.format(
             token=self.token,
-            target_slots=slots_desc,
+            slot_rows=_render_slot_rows(_default_target_slots()),
+            time_options=_render_time_options(),
+            court_checkboxes=_render_court_checkboxes(self.config.get("court_order", _SELECTABLE_COURTS)),
             last_result_block=last_block,
         )
 
@@ -218,7 +376,10 @@ def main() -> None:
     if not ngrok_authtoken:
         raise SystemExit("NGROK_AUTHTOKEN이 없으면 폰에서 접속할 링크를 만들 수 없습니다. .env에 설정해주세요.")
     ngrok.set_auth_token(ngrok_authtoken)
-    tunnel = ngrok.connect(server.port, "http")
+    # NGROK_DOMAIN(ngrok 대시보드에서 예약한 고정 도메인)을 설정해두면 재실행해도 링크가 바뀌지 않아,
+    # 폰 홈 화면에 추가한 아이콘이 계속 같은 주소로 열린다.
+    ngrok_domain = os.environ.get("NGROK_DOMAIN")
+    tunnel = ngrok.connect(server.port, "http", domain=ngrok_domain) if ngrok_domain else ngrok.connect(server.port, "http")
     server.public_url = tunnel.public_url
     link = server.page_url(server.public_url)
 

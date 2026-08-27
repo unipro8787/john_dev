@@ -1,4 +1,7 @@
 .env
+.remote_token
 captcha_*.png
 debug_calendar_*.png
+debug_fee_*.png
 reservation_result_*.txt
+*.log
