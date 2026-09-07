@@ -192,6 +192,30 @@ def find_time_slot_state(page: Page, label: str) -> tuple[str, int] | None:
     return ("disabled" if disabled else "available"), idx
 
 
+def click_captcha_refresh(page: Page, court_num: int, prev_bytes: bytes) -> bytes:
+    """새로고침 버튼을 누르고, 실제로 새 보안문자 이미지가 뜰 때까지 기다린다 (최대 ~3초).
+    2026-09-07 실전에서 새로고침 버튼 클릭 자체는 성공(예외 없음)했는데도 재시도 5번 내내
+    이미지가 완전히 동일했던 사고가 있었다 - 클릭 직후 고정 대기(500ms)만으로는 새 이미지가
+    실제로 화면에 반영됐는지 보장할 수 없다는 뜻이라, 바이트 비교로 직접 확인한다.
+    실패하면 (같은 이미지가 그대로 남으면) 로그를 남기고 이전 이미지를 그대로 반환한다 -
+    호출부는 이 반환값을 다음 시도의 "이전 이미지"로 계속 사용하면 된다."""
+    try:
+        page.get_by_role("button", name="새로고침").click(timeout=5000)
+    except Exception as exc:  # noqa: BLE001
+        _log(f"  -> {court_num}번 코트: 새로고침 버튼 클릭 실패({exc!r}), 이전 이미지로 재시도합니다.")
+        return prev_bytes
+    for _ in range(6):  # 6 * 500ms = 최대 3초
+        page.wait_for_timeout(500)
+        try:
+            current = page.locator("#capchaImage").screenshot(timeout=2000)
+        except Exception:  # noqa: BLE001
+            continue
+        if current != prev_bytes:
+            return current
+    _log(f"  -> {court_num}번 코트: 새로고침을 눌렀지만 3초 내에 이미지가 바뀌지 않았습니다 (이전 이미지로 계속 진행).")
+    return prev_bytes
+
+
 def book_court(page: Page, court_num: int, stadium_idx: int, target_date: datetime,
                 time_label: str, config: dict, remote_server: RemoteCaptchaServer,
                 public_url: str, dialog_messages: list[str],
@@ -290,7 +314,8 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
             if success_event.is_set():
                 return None
             captcha_path = SCRIPT_DIR / f"captcha_{court_num}_{attempt}.png"
-            page.locator("#capchaImage").screenshot(path=str(captcha_path))
+            captcha_bytes = page.locator("#capchaImage").screenshot()
+            captcha_path.write_bytes(captcha_bytes)
             remote_server.update_captcha(captcha_path)
             try:
                 os.startfile(captcha_path)  # Windows에서 기본 이미지 뷰어로 열기
@@ -336,8 +361,7 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
             source, code = got
             code = code.strip()
             if code.lower() == "r":
-                page.get_by_role("button", name="새로고침").click()
-                page.wait_for_timeout(500)
+                click_captcha_refresh(page, court_num, captcha_bytes)
                 continue
             page.fill('input[name="capchaText"]', code)
             dialogs_before = len(dialog_messages)
@@ -350,6 +374,16 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
                 # 정확한 문구를 실제로 로그로 본 적이 없어 아직은 구분하지 않고 모두 재시도한다.
                 # 다음에 이 상황이 재현되면 book_court.log에서 실제 문구를 확인할 수 있다.
                 _log(f"  -> {court_num}번 코트, attempt {attempt + 1}: 사이트 응답: {new_dialogs[-1]} 다시 시도합니다.")
+                # 2026-09-07 실전 로그 확인: 한 번 틀리면 화면에 보이는 이미지는 그대로인데
+                # (captcha_5_0.png와 captcha_5_1.png가 바이트 단위로 동일) 재입력도 계속
+                # "일치하지 않습니다"만 반복됐다 - 실패한 보안문자는 서버 세션에서 이미 소모돼
+                # 같은 이미지를 다시 제출해도 항상 틀린 것으로 처리되는 것으로 보인다(흔한
+                # 1회용 보안문자 방식). 그래서 사람이 다시 읽어 입력하기 전에 새로고침을 먼저
+                # 눌러 다음 시도가 실제로 유효한 새 보안문자를 받도록 한다.
+                # (같은 날 두 번째 확인: 새로고침 버튼 자체는 클릭에 성공하는데도 5번 재시도
+                # 내내 이미지가 안 바뀐 사고가 재현돼 click_captcha_refresh()로 교체 -
+                # 클릭 후 실제로 바이트가 달라질 때까지 최대 3초 폴링하고, 실패하면 로그를 남긴다.)
+                captcha_bytes = click_captcha_refresh(page, court_num, captcha_bytes)
                 continue
             # "이용료 *" 라벨(버튼 옆)과 구분하기 위해 콜론이 붙은 결과 텍스트("이용료 : 13,000원")만 매칭한다.
             fee_locator = page.get_by_text(re.compile(r"이용료\s*[:：]"))
