@@ -4,6 +4,9 @@
   const startInput = document.getElementById("start-date");
   const endInput = document.getElementById("end-date");
   const quickRange = document.getElementById("quick-range");
+  const timeRange = document.getElementById("time-range");
+  const timeStartInput = document.getElementById("time-start");
+  const timeEndInput = document.getElementById("time-end");
   const facilityFilter = document.getElementById("facility-filter");
   const searchBtn = document.getElementById("search-btn");
   const statusArea = document.getElementById("status-area");
@@ -37,6 +40,26 @@
   [startInput, endInput].forEach((el) => {
     el.addEventListener("change", () => {
       [...quickRange.querySelectorAll(".quick-btn")].forEach((btn) => btn.classList.remove("active"));
+    });
+  });
+
+  function setTimeRange(startTime, endTime) {
+    timeStartInput.value = startTime;
+    timeEndInput.value = endTime;
+    [...timeRange.querySelectorAll(".time-btn")].forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.start === startTime && btn.dataset.end === endTime);
+    });
+  }
+
+  timeRange.addEventListener("click", (e) => {
+    const btn = e.target.closest(".time-btn");
+    if (!btn) return;
+    setTimeRange(btn.dataset.start, btn.dataset.end);
+  });
+
+  [timeStartInput, timeEndInput].forEach((el) => {
+    el.addEventListener("change", () => {
+      [...timeRange.querySelectorAll(".time-btn")].forEach((btn) => btn.classList.remove("active"));
     });
   });
 
@@ -147,6 +170,8 @@
     try {
       const params = new URLSearchParams({ start, end });
       for (const f of selectedFacilities) params.append("facility", f);
+      if (timeStartInput.value) params.set("time_start", timeStartInput.value);
+      if (timeEndInput.value) params.set("time_end", timeEndInput.value);
 
       const res = await fetch(`/api/search?${params.toString()}`);
       const data = await res.json();
@@ -170,6 +195,7 @@
   (async () => {
     await loadFacilities();
     setQuickRange(7);
+    setTimeRange("", "");
     runSearch();
   })();
 })();

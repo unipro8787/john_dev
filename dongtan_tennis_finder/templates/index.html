@@ -29,6 +29,7 @@
 
   <main>
     <section class="panel" id="search-panel">
+      <div class="section-label">기간</div>
       <div class="quick-range" id="quick-range" role="group" aria-label="빠른 기간 선택">
         <button type="button" class="chip quick-btn" data-days="1">오늘</button>
         <button type="button" class="chip quick-btn" data-days="3">3일</button>
@@ -48,6 +49,26 @@
         </label>
       </div>
 
+      <div class="section-label">시간대</div>
+      <div class="time-range" id="time-range" role="group" aria-label="빠른 시간대 선택">
+        <button type="button" class="chip time-btn" data-start="" data-end="">전체 시간</button>
+        <button type="button" class="chip time-btn" data-start="06:00" data-end="12:00">오전</button>
+        <button type="button" class="chip time-btn" data-start="12:00" data-end="18:00">오후</button>
+        <button type="button" class="chip time-btn" data-start="18:00" data-end="22:00">저녁</button>
+      </div>
+
+      <div class="date-row">
+        <label class="field">
+          <span>시작 시간</span>
+          <input type="time" id="time-start" step="1800">
+        </label>
+        <label class="field">
+          <span>종료 시간</span>
+          <input type="time" id="time-end" step="1800">
+        </label>
+      </div>
+
+      <div class="section-label">시설</div>
       <div class="facility-filter" id="facility-filter" aria-label="시설 필터">
         <!-- JS로 채움 -->
       </div>

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import date, datetime, timedelta
 
@@ -18,6 +19,7 @@ from hscity_client import fetch_month
 app = Flask(__name__)
 
 MAX_RANGE_DAYS = 45  # 한 번에 조회 가능한 최대 기간 (API 부하 방지)
+_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 CACHE_TTL_SECONDS = 180  # 코트별 월 데이터 캐시 유지 시간
 
 _month_cache: dict[tuple[int, int, int], tuple[float, list]] = {}
@@ -89,6 +91,14 @@ def api_search():
 
     selected = request.args.getlist("facility") or None  # None이면 전체
 
+    time_start = request.args.get("time_start") or None
+    time_end = request.args.get("time_end") or None
+    for label, value in (("time_start", time_start), ("time_end", time_end)):
+        if value and not _TIME_RE.match(value):
+            return jsonify({"error": f"{label} 시간 형식이 잘못되었습니다 (HH:MM)"}), 400
+    if time_start and time_end and time_end <= time_start:
+        return jsonify({"error": "종료 시간은 시작 시간보다 이후여야 합니다"}), 400
+
     results = []
     for facility_name, courts in FACILITIES.items():
         if selected and facility_name not in selected:
@@ -96,6 +106,11 @@ def api_search():
         for court_label, stadium_idx in courts.items():
             slots = _fetch_range_cached(stadium_idx, start, end)
             available = [s for s in slots if s.status == "AVAILABLE"]
+            # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김
+            if time_start:
+                available = [s for s in available if s.end > time_start]
+            if time_end:
+                available = [s for s in available if s.begin < time_end]
             for slot in available:
                 results.append(
                     {

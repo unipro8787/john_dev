@@ -75,6 +75,7 @@ python app.py
 ### API 엔드포인트
 
 - `GET /api/facilities` — 시설/코트 목록 (stadiumIdx 제외)
-- `GET /api/search?start=YYYY-MM-DD&end=YYYY-MM-DD&facility=시설명` — 예약 가능 시간대 목록 (JSON)
+- `GET /api/search?start=YYYY-MM-DD&end=YYYY-MM-DD&facility=시설명&time_start=HH:MM&time_end=HH:MM` — 예약 가능 시간대 목록 (JSON)
   - `facility`는 반복 지정 가능, 생략 시 전체 시설
+  - `time_start`/`time_end`는 생략 가능 (전체 시간). 지정한 시간 구간과 겹치는 슬롯만 반환
   - 조회 기간은 최대 45일 (`app.py`의 `MAX_RANGE_DAYS`)

@@ -95,11 +95,25 @@ body {
   box-shadow: var(--shadow);
 }
 
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
 .quick-range {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
+  margin-bottom: 14px;
+}
+
+.time-range {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 14px;
 }
 
