@@ -1,0 +1,48 @@
+name: 차량 점검 카톡 알림
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 매일 00:00 UTC = 09:00 KST
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "같은 내용을 최근에 보냈어도 보내기 (1=예)"
+        default: "0"
+
+permissions:
+  contents: write  # 알림 기록(car_alert_state.json)을 커밋하기 위해
+
+concurrency:
+  group: car-maintenance-kakao
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Send car maintenance alert to KakaoTalk
+        working-directory: john_entertainment
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_DATA: ${{ secrets.KAKAO_DATA }}
+        run: python car_alert_job.py force=${{ github.event.inputs.force || '0' }}
+
+      - name: Commit alert state
+        run: |
+          f=john_entertainment/data/car_alert_state.json
+          [ -f "$f" ] || exit 0
+          git add "$f"
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898599+github-actions[bot]@users.noreply.github.com"
+          git commit -m "car: alert sent $(date +%F)"
+          git pull --rebase && git push

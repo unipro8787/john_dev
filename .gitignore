@@ -1,0 +1,18 @@
+john_entertainment/dashboard_password.txt
+john_entertainment/.dashboard_secret
+john_entertainment/data/bank_inbox/
+john_entertainment/sms_token.txt
+john_entertainment/data/sms_log.jsonl
+
+# john_entertainment: 가계부·거래내역·비밀번호가 있어 공개 저장소에는 차량 점검 알림(GitHub Actions)에 필요한 파일만 올린다
+john_entertainment/*
+!john_entertainment/car_alert_job.py
+!john_entertainment/agents/
+john_entertainment/agents/*
+!john_entertainment/agents/base.py
+!john_entertainment/agents/car.py
+!john_entertainment/agents/kakao.py
+!john_entertainment/data/
+john_entertainment/data/*
+!john_entertainment/data/car.json
+!john_entertainment/data/car_alert_state.json

@@ -100,7 +100,10 @@ def _chunks(text: str, size: int) -> list[str]:
     return chunks or [""]
 
 
-def kakao_send_to_me(text: str) -> None:
+NEWS_URL = "https://news.naver.com/section/101"
+
+
+def kakao_send_to_me(text: str, label: str = "경제뉴스", link_url: str = NEWS_URL) -> None:
     rest_api_key = os.environ.get("KAKAO_REST_API_KEY")
     refresh_token = os.environ.get("KAKAO_REFRESH_TOKEN")
     if not rest_api_key or not refresh_token:
@@ -113,11 +116,11 @@ def kakao_send_to_me(text: str) -> None:
 
     parts = _chunks(text, CHUNK_SIZE)
     for i, part in enumerate(parts, start=1):
-        prefix = f"[경제뉴스 {i}/{len(parts)}]\n" if len(parts) > 1 else ""
+        prefix = f"[{label} {i}/{len(parts)}]\n" if len(parts) > 1 else ""
         template = {
             "object_type": "text",
             "text": prefix + part,
-            "link": {"web_url": "https://news.naver.com/section/101", "mobile_web_url": "https://news.naver.com/section/101"},
+            "link": {"web_url": link_url, "mobile_web_url": link_url},
         }
         body = urllib.parse.urlencode(
             {"template_object": json.dumps(template, ensure_ascii=False)}
