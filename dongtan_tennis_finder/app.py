@@ -1,4 +1,4 @@
-# 화성시·부천시 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
+# 화성시·부천시·경주시 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
 # check_availability.py의 조회 로직을 그대로 재사용하고, 검색 UI + JSON API를 얹은 것.
 #
 # 로컬 실행: python app.py  (http://127.0.0.1:5000)
@@ -27,6 +27,7 @@ from flask import Flask, Response, abort, jsonify, redirect, render_template, re
 import requests
 
 import bucheon_client
+import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 
@@ -34,8 +35,9 @@ from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 FETCHERS = {
     "hscity": hscity_client.fetch_month,
     "bucheon": bucheon_client.fetch_month,
+    "gyeongju": gyeongju_client.fetch_month,  # 날짜 단위(begin/end 빈 슬롯)
 }
-ALL_FACILITIES: dict[str, dict[str, int]] = {name: courts for c in CITIES for name, courts in c["facilities"].items()}
+ALL_FACILITIES: dict[str, dict[str, int | str]] = {name: courts for c in CITIES for name, courts in c["facilities"].items()}
 
 app = Flask(__name__)
 
@@ -45,7 +47,7 @@ CACHE_TTL_SECONDS = 180  # 코트별 월 데이터 캐시 유지 시간
 
 FETCH_WORKERS = 6  # 코트별 조회를 동시에 보내는 수 (조회 시간 단축, 원 사이트 부하는 캐시로 제한)
 
-_month_cache: dict[tuple[str, int, int, int], tuple[float, list]] = {}
+_month_cache: dict[tuple[str, int | str, int, int], tuple[float, list]] = {}
 _cache_lock = threading.Lock()
 _local = threading.local()  # requests.Session은 스레드 간 공유가 안전하지 않아 스레드마다 하나씩 둔다
 
@@ -56,7 +58,7 @@ def _session() -> requests.Session:
     return _local.session
 
 
-def _cached_fetch_month(source: str, court_id: int, year: int, month: int) -> list:
+def _cached_fetch_month(source: str, court_id: int | str, year: int, month: int) -> list:
     key = (source, court_id, year, month)
     now = time.time()
     with _cache_lock:
@@ -69,7 +71,7 @@ def _cached_fetch_month(source: str, court_id: int, year: int, month: int) -> li
     return slots
 
 
-def _fetch_range_cached(source: str, court_id: int, start: date, end: date) -> list:
+def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date) -> list:
     months: set[tuple[int, int]] = set()
     y, m = start.year, start.month
     while (y, m) <= (end.year, end.month):
@@ -88,9 +90,9 @@ def _fetch_range_cached(source: str, court_id: int, start: date, end: date) -> l
     return result
 
 
-SITE_NAME = "화성·부천 테니스코트 찾기"
-POLICY_EFFECTIVE = "2026-10-06"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-06"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+SITE_NAME = "테니스코트 빈자리 찾기"
+POLICY_EFFECTIVE = "2026-10-07"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-07"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -202,6 +204,7 @@ def api_facilities():
                 "name": city["name"],
                 "booking_url": city["booking_url"],
                 "booking_name": city["booking_name"],
+                "day_only": bool(city.get("day_only")),
                 "regions": [
                     {
                         "name": region,
@@ -269,11 +272,12 @@ def api_search():
     results = []
     for (city_name, _, facility_name, court_label, _), slots in zip(targets, fetched):
         available = [s for s in slots if s.status == "AVAILABLE"]
-        # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김
+        # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김.
+        # 날짜 단위 슬롯(경주, begin/end 없음)은 시간을 알 수 없으니 거르지 않고 그대로 둔다.
         if time_start:
-            available = [s for s in available if s.end > time_start]
+            available = [s for s in available if not s.begin or s.end > time_start]
         if time_end:
-            available = [s for s in available if s.begin < time_end]
+            available = [s for s in available if not s.begin or s.begin < time_end]
         for slot in available:
             results.append(
                 {
@@ -283,6 +287,7 @@ def api_search():
                     "date": slot.date,
                     "begin": slot.begin,
                     "end": slot.end,
+                    "day_only": not slot.begin,
                 }
             )
 

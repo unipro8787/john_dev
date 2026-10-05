@@ -475,3 +475,10 @@ footer a {
   font-size: 0.92rem;
   margin: 14px 0 6px;
 }
+
+/* 날짜 단위로만 공개하는 곳(경주)의 결과 칩 */
+.time-slot.day-only {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+}

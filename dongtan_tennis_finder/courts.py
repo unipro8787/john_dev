@@ -117,12 +117,38 @@ FACILITY_NOTES["부천실내테니스장"] = "실내"
 assert sorted(f for names in BUCHEON_REGIONS.values() for f in names) == sorted(BUCHEON_FACILITIES), "부천 REGIONS 어긋남"
 
 
+# ── 경주시 통합예약(www.gyeongju.go.kr/reserve) 테니스장 (2026-10-07 기준)
+# sports_facilities/list.jsp 목록에서 "인터넷" 예약인 일반 테니스 코트만 넣었다.
+# 방문 예약(강변 1·2코트), 전화 예약(시민 1코트), 소프트테니스장(정구)은 제외.
+# 경주는 날짜 단위로만 예약 가능 여부를 공개하므로 결과도 "그날 빈 시간 있음"으로만 보여 준다.
+# 코트 값은 "mem_id:item_id". 외동은 계절(10~3월 / 4~9월)마다 항목이 나뉘어 있어 두 항목을 합친다.
+GYEONGJU_FACILITIES: dict[str, dict[str, str]] = {
+    "강변테니스장(북천)": {f"{n}번 코트": f"B0000031:T00002{n + 57:02d}" for n in range(3, 11)},
+    "시민테니스장(북천)": {f"{n}번 코트": f"B0000031:T00002{n + 67:02d}" for n in range(2, 6)},
+    "건천테니스장": {"코트": "B0000033:T0000280"},
+    "외동생활체육공원 테니스장": {
+        "1번 코트": "B0000027:T0000341,T0000342",
+        "2번 코트": "B0000027:T0000299,T0000313",
+    },
+}
+
+GYEONGJU_REGIONS: dict[str, list[str]] = {
+    "경주 시내": ["강변테니스장(북천)", "시민테니스장(북천)"],
+    "건천·외동": ["건천테니스장", "외동생활체육공원 테니스장"],
+}
+
+assert sorted(f for names in GYEONGJU_REGIONS.values() for f in names) == sorted(GYEONGJU_FACILITIES), "경주 REGIONS 어긋남"
+
+
 # ── 도시별 묶음. source는 어느 예약 시스템 클라이언트로 조회할지를 뜻한다.
 CITIES: list[dict] = [
     {"name": "화성시", "source": "hscity", "facilities": FACILITIES, "regions": REGIONS,
      "booking_url": "https://yeyak.hscity.go.kr", "booking_name": "화성시 통합예약시스템"},
     {"name": "부천시", "source": "bucheon", "facilities": BUCHEON_FACILITIES, "regions": BUCHEON_REGIONS,
      "booking_url": "https://reserv.bucheon.go.kr", "booking_name": "부천시 공공서비스예약"},
+    {"name": "경주시", "source": "gyeongju", "facilities": GYEONGJU_FACILITIES, "regions": GYEONGJU_REGIONS,
+     "booking_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp", "booking_name": "경주시 통합예약",
+     "day_only": True},
 ]
 
 # 시설 이름 → (도시 이름, source). 시설 이름은 도시 사이에서도 겹치지 않아야 한다.

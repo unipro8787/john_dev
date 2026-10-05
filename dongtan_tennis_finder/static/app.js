@@ -156,7 +156,9 @@
       const title = document.createElement("span");
       title.className = "region-name";
       const courtCount = region.facilities.reduce((n, f) => n + f.courts.length, 0);
-      title.textContent = `${region.name} · ${courtCount}${city.name === "부천시" ? "곳" : "면"}`;
+      title.textContent = city.name === "부천시"
+        ? `${region.name} · ${region.facilities.length}곳`
+        : `${region.name} · ${courtCount}면`;
       const toggle = document.createElement("button");
       toggle.type = "button";
       toggle.className = "region-toggle";
@@ -196,7 +198,8 @@
     const note = document.createElement("p");
     note.className = "city-note";
     note.innerHTML = `예약은 <a href="${city.booking_url}" target="_blank" rel="noopener">${city.booking_name}</a>에서 직접 하세요.` +
-      (city.name === "부천시" ? " 부천은 코트별이 아니라 시설 단위로 예약 가능 여부가 나오며, 다음 달 예약은 매달 20일부터 열립니다." : "");
+      (city.name === "부천시" ? " 부천은 코트별이 아니라 시설 단위로 예약 가능 여부가 나오며, 다음 달 예약은 매달 20일부터 열립니다." : "") +
+      (city.day_only ? ` ${city.name.replace(/시$/, "")}는 날짜 단위로만 예약 가능 여부를 공개해서 "그날 빈 시간 있음"으로 표시하고, 시간대 필터는 적용되지 않습니다.` : "");
     facilityFilter.appendChild(note);
     syncRegionToggles();
   }
@@ -263,8 +266,10 @@
           .sort((a, b) => a.begin.localeCompare(b.begin))
           .forEach((s) => {
             const chip = document.createElement("span");
-            chip.className = "time-slot";
-            chip.textContent = `${s.begin}~${s.end}`;
+            chip.className = "time-slot" + (s.day_only ? " day-only" : "");
+            // 경주처럼 날짜 단위로만 공개하는 곳은 시간 대신 "빈 시간 있음"으로 보여 준다
+            chip.textContent = s.day_only ? "그날 빈 시간 있음" : `${s.begin}~${s.end}`;
+            if (s.day_only) chip.title = "몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인하세요";
             slotsEl.appendChild(chip);
           });
         row.appendChild(slotsEl);

@@ -1,36 +1,38 @@
 {% extends "base.html" %}
 {% block title %}서비스 소개 · {{ site_name }}{% endblock %}
-{% block description %}화성·부천 테니스코트 찾기는 화성시와 부천시 공공 테니스장의 예약 현황을 한 번에 모아 빈 코트를 찾아 주는 무료 서비스입니다. 조회 대상 시설, 데이터 갱신 주기, 자주 묻는 질문을 안내합니다.{% endblock %}
+{% block description %}테니스코트 빈자리 찾기는 화성시·부천시·경주시 공공 테니스장의 예약 현황을 한 번에 모아 빈 코트를 찾아 주는 무료 서비스입니다. 조회 대상 시설, 데이터 갱신 주기, 자주 묻는 질문을 안내합니다.{% endblock %}
 
 {% block content %}
 <article class="panel info">
   <h2>서비스 소개</h2>
-  <p>화성·부천 테니스코트 찾기는 동탄에서 테니스를 치는 동호인이 직접 만든 무료 서비스입니다. 퇴근 후나 주말에 칠 코트를 찾으려고 코트 페이지를 하나하나 열어 보던 불편을 덜고자 만들었습니다.</p>
-  <p>화성시 통합예약시스템과 부천시 공공서비스예약이 로그인 없이 공개하는 예약 현황을 모아서, 원하는 날짜와 시간대에 예약 가능한 코트만 골라 보여 줍니다. 예약 자체는 이 사이트에서 하지 않으며, 각 시의 예약 사이트에서 직접 진행해야 합니다.</p>
+  <p>테니스코트 빈자리 찾기는 동탄에서 테니스를 치는 동호인이 직접 만든 무료 서비스입니다. 퇴근 후나 주말에 칠 코트를 찾으려고 코트 페이지를 하나하나 열어 보던 불편을 덜고자 만들었습니다.</p>
+  <p>화성시 통합예약시스템, 부천시 공공서비스예약, 경주시 통합예약이 로그인 없이 공개하는 예약 현황을 모아서, 원하는 날짜와 시간대에 예약 가능한 코트만 골라 보여 줍니다. 예약 자체는 이 사이트에서 하지 않으며, 각 시의 예약 사이트에서 직접 진행해야 합니다.</p>
 
   <h3>조회하는 테니스장</h3>
   {% for city in cities %}
   <h4 class="city-heading">{{ city.name }}</h4>
   <ul class="facility-list">
     {% for region, names in city.regions.items() %}
-    <li><b>{{ region }}</b> · {% for name in names %}{{ name | replace(' 테니스장', '') | replace('테니스장', '') }}{% if city.source == 'hscity' %} {{ city.facilities[name] | length }}면{% endif %}{% if facility_notes.get(name) %}({{ facility_notes[name] }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>
+    <li><b>{{ region }}</b> · {% for name in names %}{{ name | replace(' 테니스장', '') | replace('테니스장', '') }}{% if city.source in ('hscity', 'gyeongju') %} {{ city.facilities[name] | length }}면{% endif %}{% if facility_notes.get(name) %}({{ facility_notes[name] }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>
     {% endfor %}
   </ul>
   {% endfor %}
-  <p class="muted">화성 왕배산체육공원 3·4번 코트는 사용수익허가 코트라 통합예약시스템에서 신청할 수 없어 뺐습니다. 부천은 예약 사이트가 코트별이 아니라 시설 단위로 시간대별 예약 가능 여부를 보여 주므로 시설 단위로 표시하며, 접수가 끝난 오정레포츠센터 테니스장은 뺐습니다.</p>
+  <p class="muted">화성 왕배산체육공원 3·4번 코트는 사용수익허가 코트라 통합예약시스템에서 신청할 수 없어 뺐습니다. 부천은 예약 사이트가 코트별이 아니라 시설 단위로 시간대별 예약 가능 여부를 보여 주므로 시설 단위로 표시하며, 접수가 끝난 오정레포츠센터 테니스장은 뺐습니다. 경주는 인터넷으로 예약받는 일반 테니스 코트만 넣었고(방문·전화 예약 코트와 소프트테니스장 제외), 날짜 단위로만 예약 가능 여부를 공개해서 시간 대신 "그날 빈 시간 있음"으로 보여 줍니다.</p>
 
   <h3>자주 묻는 질문</h3>
   <dl class="faq">
     <dt>여기서 바로 예약할 수 있나요?</dt>
-    <dd>아니요. 이 사이트는 빈 코트를 찾아 주기만 합니다. 예약과 결제는 <a href="https://yeyak.hscity.go.kr" target="_blank" rel="noopener">화성시 통합예약시스템</a>이나 <a href="https://reserv.bucheon.go.kr" target="_blank" rel="noopener">부천시 공공서비스예약</a>에서 본인 계정으로 진행해 주세요.</dd>
+    <dd>아니요. 이 사이트는 빈 코트를 찾아 주기만 합니다. 예약과 결제는 <a href="https://yeyak.hscity.go.kr" target="_blank" rel="noopener">화성시 통합예약시스템</a>, <a href="https://reserv.bucheon.go.kr" target="_blank" rel="noopener">부천시 공공서비스예약</a>, <a href="https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp" target="_blank" rel="noopener">경주시 통합예약</a>에서 본인 계정으로 진행해 주세요.</dd>
     <dt>검색 결과와 실제 예약 현황이 다를 수 있나요?</dt>
     <dd>네. 같은 시설을 너무 자주 조회하지 않도록 예약 현황을 최대 3분 동안 저장해 두었다가 보여 줍니다. 그 사이 다른 사람이 예약했다면 결과에는 남아 있을 수 있습니다.</dd>
     <dt>부천은 다음 달이 왜 비어 있나요?</dt>
     <dd>부천시는 매달 20일 오전 10시에 다음 달 테니스장 예약을 엽니다. 그 전에는 다음 달 예약 현황이 나오지 않습니다.</dd>
+    <dt>경주는 왜 시간이 안 나오나요?</dt>
+    <dd>경주시 통합예약은 로그인 없이는 날짜별 예약 가능 여부만 보여 줍니다. 그래서 그날 하루 중 빈 시간이 있는 코트만 알려 드리고, 몇 시가 비었는지는 경주시 통합예약에서 날짜를 눌러 확인하셔야 합니다. 시간대 필터도 경주에는 적용되지 않습니다.</dd>
     <dt>로그인이나 개인정보 입력이 필요한가요?</dt>
     <dd>필요 없습니다. 검색에 쓰는 날짜·시간·시설 조건만 서버로 보내며, 이름이나 연락처는 받지 않습니다. 자세한 내용은 <a href="{{ url_for('privacy') }}">개인정보처리방침</a>을 참고해 주세요.</dd>
     <dt>수원 등 다른 지역 테니스장도 볼 수 있나요?</dt>
-    <dd>지금은 화성시와 부천시만 보여 줍니다. 다른 시·구는 예약 현황을 로그인 뒤에만 보여 주거나 자동 조회를 허용하지 않는 곳이 많아, 공개된 곳을 확인하는 대로 추가합니다. 수원시 공공 테니스장(만석공원, 나촌배수지 등)은 경기도의 <a href="https://share.gg.go.kr" target="_blank" rel="noopener">경기공유서비스</a>에서 예약을 받는데, 이 사이트는 자동 조회를 허용하지 않아 예약 현황을 가져오지 않습니다. 수원 코트는 경기공유서비스에서 직접 확인해 주세요.</dd>
+    <dd>지금은 화성시, 부천시, 경주시만 보여 줍니다. 다른 시·구는 예약 현황을 로그인 뒤에만 보여 주거나 자동 조회를 허용하지 않는 곳이 많아, 공개된 곳을 확인하는 대로 추가합니다. 수원시 공공 테니스장(만석공원, 나촌배수지 등)은 경기도의 <a href="https://share.gg.go.kr" target="_blank" rel="noopener">경기공유서비스</a>에서 예약을 받는데, 이 사이트는 자동 조회를 허용하지 않아 예약 현황을 가져오지 않습니다. 수원 코트는 경기공유서비스에서 직접 확인해 주세요.</dd>
     <dt>아이폰 앱처럼 쓸 수 있나요?</dt>
     <dd>Safari에서 이 사이트를 열고 공유 버튼 → "홈 화면에 추가"를 누르면 앱 아이콘으로 바로 열 수 있습니다.</dd>
   </dl>
