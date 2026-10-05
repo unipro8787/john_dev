@@ -20,6 +20,7 @@ HEADERS = {
 
 STATUS_LABELS = {
     "AVAILABLE": "예약가능",
+    "AVAILABLE_PHONE": "전화 예약 가능",  # 강남구: 온라인 신청기간이 끝난 뒤 남은 칸
     "BOOKED": "예약완료",
     "PAYMENT_PENDING": "승인(결제대기)",
     "HOLD": "승인보류",

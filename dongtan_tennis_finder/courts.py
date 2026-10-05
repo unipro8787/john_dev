@@ -140,6 +140,31 @@ GYEONGJU_REGIONS: dict[str, list[str]] = {
 assert sorted(f for names in GYEONGJU_REGIONS.values() for f in names) == sorted(GYEONGJU_FACILITIES), "경주 REGIONS 어긋남"
 
 
+# ── 서울 강남구 통합예약(life.gangnam.go.kr) 테니스장 (2026-10-07 기준)
+# rest/common/company(type=F) → part → place 로 확인한 코드. 값은 "company:part:place".
+# 매월 25일까지 다음 달을 온라인으로 받고, 그 뒤 남은 시간은 각 시설에 전화 예약 (gangnam_client 참고).
+GANGNAM_FACILITIES: dict[str, dict[str, str]] = {
+    "봉은테니스장": {f"{n}번 코트": f"GNCC05:04:{33 + n}" for n in range(1, 5)},
+    "포이테니스장": {"A코트": "GNCC06:04:15", "B코트": "GNCC06:04:16"},
+    "강남세곡체육공원 테니스장": {f"{n}번 코트": f"GNCC33:04:{12 + n}" for n in range(1, 5)},
+}
+
+GANGNAM_REGIONS: dict[str, list[str]] = {
+    "강남구": ["봉은테니스장", "포이테니스장", "강남세곡체육공원 테니스장"],
+}
+
+# 온라인 신청기간이 끝난 뒤 남은 시간은 전화로 예약한다 (통합예약 시설예약 안내 기준)
+GANGNAM_PHONES: dict[str, str] = {
+    "봉은테니스장": "02-2176-0890",
+    "포이테니스장": "02-2176-0876",
+    "강남세곡체육공원 테니스장": "02-2176-0870",
+}
+for _name, _tel in GANGNAM_PHONES.items():
+    FACILITY_NOTES[_name] = f"전화 {_tel}"
+
+assert sorted(f for names in GANGNAM_REGIONS.values() for f in names) == sorted(GANGNAM_FACILITIES), "강남 REGIONS 어긋남"
+
+
 # ── 도시별 묶음. source는 어느 예약 시스템 클라이언트로 조회할지를 뜻한다.
 CITIES: list[dict] = [
     {"name": "화성시", "source": "hscity", "facilities": FACILITIES, "regions": REGIONS,
@@ -149,6 +174,8 @@ CITIES: list[dict] = [
     {"name": "경주시", "source": "gyeongju", "facilities": GYEONGJU_FACILITIES, "regions": GYEONGJU_REGIONS,
      "booking_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp", "booking_name": "경주시 통합예약",
      "day_only": True},
+    {"name": "서울 강남구", "source": "gangnam", "facilities": GANGNAM_FACILITIES, "regions": GANGNAM_REGIONS,
+     "booking_url": "https://life.gangnam.go.kr/fmcs/54", "booking_name": "강남구 통합예약"},
 ]
 
 # 시설 이름 → (도시 이름, source). 시설 이름은 도시 사이에서도 겹치지 않아야 한다.

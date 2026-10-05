@@ -1,4 +1,4 @@
-# 화성시·부천시·경주시 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
+# 화성시·부천시·경주시·서울 강남구 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
 # check_availability.py의 조회 로직을 그대로 재사용하고, 검색 UI + JSON API를 얹은 것.
 #
 # 로컬 실행: python app.py  (http://127.0.0.1:5000)
@@ -27,6 +27,7 @@ from flask import Flask, Response, abort, jsonify, redirect, render_template, re
 import requests
 
 import bucheon_client
+import gangnam_client
 import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
@@ -36,7 +37,9 @@ FETCHERS = {
     "hscity": hscity_client.fetch_month,
     "bucheon": bucheon_client.fetch_month,
     "gyeongju": gyeongju_client.fetch_month,  # 날짜 단위(begin/end 빈 슬롯)
+    "gangnam": gangnam_client.fetch_month,    # 온라인 마감 뒤 남은 칸은 AVAILABLE_PHONE
 }
+AVAILABLE_STATUSES = {"AVAILABLE", "AVAILABLE_PHONE"}
 ALL_FACILITIES: dict[str, dict[str, int | str]] = {name: courts for c in CITIES for name, courts in c["facilities"].items()}
 
 app = Flask(__name__)
@@ -271,7 +274,7 @@ def api_search():
 
     results = []
     for (city_name, _, facility_name, court_label, _), slots in zip(targets, fetched):
-        available = [s for s in slots if s.status == "AVAILABLE"]
+        available = [s for s in slots if s.status in AVAILABLE_STATUSES]
         # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김.
         # 날짜 단위 슬롯(경주, begin/end 없음)은 시간을 알 수 없으니 거르지 않고 그대로 둔다.
         if time_start:
@@ -288,6 +291,7 @@ def api_search():
                     "begin": slot.begin,
                     "end": slot.end,
                     "day_only": not slot.begin,
+                    "phone_only": slot.status == "AVAILABLE_PHONE",
                 }
             )
 

@@ -199,7 +199,10 @@
     note.className = "city-note";
     note.innerHTML = `예약은 <a href="${city.booking_url}" target="_blank" rel="noopener">${city.booking_name}</a>에서 직접 하세요.` +
       (city.name === "부천시" ? " 부천은 코트별이 아니라 시설 단위로 예약 가능 여부가 나오며, 다음 달 예약은 매달 20일부터 열립니다." : "") +
-      (city.day_only ? ` ${city.name.replace(/시$/, "")}는 날짜 단위로만 예약 가능 여부를 공개해서 "그날 빈 시간 있음"으로 표시하고, 시간대 필터는 적용되지 않습니다.` : "");
+      (city.day_only ? ` ${city.name.replace(/시$/, "")}는 날짜 단위로만 예약 가능 여부를 공개해서 "그날 빈 시간 있음"으로 표시하고, 시간대 필터는 적용되지 않습니다.` : "") +
+      (city.name === "서울 강남구"
+        ? " 강남구는 매월 25일까지 다음 달을 온라인으로 신청받고, 그 뒤 남은 시간(☎ 표시)은 시설에 전화로 예약합니다. 봉은 02-2176-0890 · 포이 02-2176-0876 · 세곡 02-2176-0870. 다음 달은 신청기간이 끝난 26일부터 보입니다."
+        : "");
     facilityFilter.appendChild(note);
     syncRegionToggles();
   }
@@ -266,10 +269,15 @@
           .sort((a, b) => a.begin.localeCompare(b.begin))
           .forEach((s) => {
             const chip = document.createElement("span");
-            chip.className = "time-slot" + (s.day_only ? " day-only" : "");
+            chip.className = "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : "");
             // 경주처럼 날짜 단위로만 공개하는 곳은 시간 대신 "빈 시간 있음"으로 보여 준다
             chip.textContent = s.day_only ? "그날 빈 시간 있음" : `${s.begin}~${s.end}`;
             if (s.day_only) chip.title = "몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인하세요";
+            if (s.phone_only) {
+              // 강남구: 온라인 신청기간이 끝난 달의 남은 칸은 시설에 전화로 예약한다
+              chip.textContent = `☎ ${s.begin}~${s.end}`;
+              chip.title = "온라인 신청기간이 끝나 시설에 전화로 예약해야 하는 빈 시간";
+            }
             slotsEl.appendChild(chip);
           });
         row.appendChild(slotsEl);
