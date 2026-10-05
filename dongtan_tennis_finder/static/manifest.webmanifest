@@ -1,6 +1,6 @@
 {
-  "name": "동탄 테니스코트 찾기",
-  "short_name": "동탄테니스",
+  "name": "화성 테니스코트 찾기",
+  "short_name": "화성테니스",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f1512",

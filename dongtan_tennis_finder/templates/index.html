@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}동탄 테니스장 빈 코트 찾기 · 화성시 공공 테니스장 예약 현황{% endblock %}
+{% block title %}화성·동탄 테니스장 빈 코트 찾기 · 화성시 공공 테니스장 예약 현황{% endblock %}
 
 {% block head %}
 <script type="application/ld+json">
@@ -11,14 +11,14 @@
   "applicationCategory": "SportsApplication",
   "operatingSystem": "Any",
   "inLanguage": "ko",
-  "description": "동탄·화성시 공공 테니스장의 예약 가능한 빈 코트와 시간대를 한 번에 검색하는 무료 웹앱",
+  "description": "동탄·병점·서부권 등 화성시 공공 테니스장의 예약 가능한 빈 코트와 시간대를 한 번에 검색하는 무료 웹앱",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
 }
 </script>
 {% endblock %}
 
 {% block header %}
-<a class="brand-link" href="{{ url_for('index') }}"><h1>🎾 동탄 테니스코트 찾기</h1></a>
+<a class="brand-link" href="{{ url_for('index') }}"><h1>🎾 화성 테니스코트 찾기</h1></a>
 <p class="subtitle">화성시 통합예약시스템 실시간 조회</p>
 {% endblock %}
 
@@ -76,18 +76,18 @@
 <section id="results" class="results"></section>
 
 <section class="panel info" aria-labelledby="guide-title">
-  <h2 id="guide-title">동탄 테니스장 빈 코트, 한 번에 찾기</h2>
-  <p>화성시 통합예약시스템에서는 코트마다 페이지를 하나씩 열어 예약 현황을 확인해야 합니다. 이 서비스는 동탄 지역 공공 테니스장 {{ court_count }}개 코트의 예약 현황을 한 번에 모아, 원하는 날짜와 시간대에 비어 있는 코트만 보여 줍니다.</p>
+  <h2 id="guide-title">화성·동탄 테니스장 빈 코트, 한 번에 찾기</h2>
+  <p>화성시 통합예약시스템에서는 코트마다 페이지를 하나씩 열어 예약 현황을 확인해야 합니다. 이 서비스는 화성시 공공 테니스장 {{ facility_count }}곳, {{ court_count }}개 코트의 예약 현황을 한 번에 모아, 원하는 날짜와 시간대에 비어 있는 코트만 보여 줍니다.</p>
   <ol class="steps">
     <li><b>기간 고르기</b> · 오늘, 3일, 7일처럼 빠르게 고르거나 시작일과 종료일을 직접 지정합니다.</li>
     <li><b>시간대 고르기</b> · 퇴근 후 저녁, 주말 오전처럼 치고 싶은 시간대만 남길 수 있습니다.</li>
-    <li><b>시설 고르기</b> · 가까운 테니스장만 골라 보거나 전체를 한 번에 봅니다.</li>
+    <li><b>시설 고르기</b> · 동탄·병점권이나 서부권처럼 권역 단위로 고르거나, 가까운 테니스장만 골라 봅니다. 고른 시설은 다음에 열 때도 기억합니다.</li>
     <li><b>예약하기</b> · 마음에 드는 코트를 찾았다면 화성시 통합예약시스템에서 예약을 마무리합니다.</li>
   </ol>
   <h3>조회하는 테니스장</h3>
   <ul class="facility-list">
-    {% for name, courts in facilities.items() %}
-    <li><b>{{ name }}</b> · {{ courts | length }}면 ({{ courts.keys() | join(', ') }})</li>
+    {% for region, names in regions.items() %}
+    <li><b>{{ region }}</b> · {% for name in names %}{{ name | replace(' 테니스장', '') }} {{ facilities[name] | length }}면{% if facility_notes.get(name) %}({{ facility_notes[name] }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>
     {% endfor %}
   </ul>
   <p class="muted">예약 현황은 최대 3분 단위로 새로 불러오므로, 아주 최근에 들어온 예약은 반영되지 않았을 수 있습니다. <a href="{{ url_for('about') }}">서비스 소개와 자주 묻는 질문</a>도 확인해 보세요.</p>

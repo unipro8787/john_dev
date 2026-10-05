@@ -1,4 +1,4 @@
-# 동탄 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
+# 화성시 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
 # check_availability.py의 조회 로직을 그대로 재사용하고, 검색 UI + JSON API를 얹은 것.
 #
 # 로컬 실행: python app.py  (http://127.0.0.1:5000)
@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 
 from urllib.parse import urlparse
@@ -24,7 +26,7 @@ from urllib.parse import urlparse
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request, url_for
 import requests
 
-from courts import FACILITIES
+from courts import FACILITIES, FACILITY_NOTES, REGIONS
 from hscity_client import fetch_month
 
 app = Flask(__name__)
@@ -33,18 +35,29 @@ MAX_RANGE_DAYS = 45  # 한 번에 조회 가능한 최대 기간 (API 부하 방
 _TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 CACHE_TTL_SECONDS = 180  # 코트별 월 데이터 캐시 유지 시간
 
+FETCH_WORKERS = 6  # 코트별 조회를 동시에 보내는 수 (전체 24면 조회 시간 단축, 원 사이트 부하는 그대로 캐시로 제한)
+
 _month_cache: dict[tuple[int, int, int], tuple[float, list]] = {}
-_session = requests.Session()
+_cache_lock = threading.Lock()
+_local = threading.local()  # requests.Session은 스레드 간 공유가 안전하지 않아 스레드마다 하나씩 둔다
+
+
+def _session() -> requests.Session:
+    if not hasattr(_local, "session"):
+        _local.session = requests.Session()
+    return _local.session
 
 
 def _cached_fetch_month(stadium_idx: int, year: int, month: int) -> list:
     key = (stadium_idx, year, month)
     now = time.time()
-    cached = _month_cache.get(key)
+    with _cache_lock:
+        cached = _month_cache.get(key)
     if cached and now - cached[0] < CACHE_TTL_SECONDS:
         return cached[1]
-    slots = fetch_month(_session, stadium_idx, year, month)
-    _month_cache[key] = (now, slots)
+    slots = fetch_month(_session(), stadium_idx, year, month)
+    with _cache_lock:
+        _month_cache[key] = (now, slots)
     return slots
 
 
@@ -67,9 +80,9 @@ def _fetch_range_cached(stadium_idx: int, start: date, end: date) -> list:
     return result
 
 
-SITE_NAME = "동탄 테니스코트 찾기"
-POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-05"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+SITE_NAME = "화성 테니스코트 찾기"
+POLICY_EFFECTIVE = "2026-10-06"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-06"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -111,6 +124,9 @@ def _inject_site():
         "adsense_client": _adsense_client(),
         "contact_email": _env("CONTACT_EMAIL"),
         "facilities": FACILITIES,
+        "regions": REGIONS,
+        "facility_notes": FACILITY_NOTES,
+        "facility_count": len(FACILITIES),
         "court_count": sum(len(c) for c in FACILITIES.values()),
         "policy_effective": POLICY_EFFECTIVE,
     }
@@ -172,7 +188,19 @@ def healthz():
 
 @app.get("/api/facilities")
 def api_facilities():
-    return jsonify(FACILITIES)
+    # 권역 → 시설 → 코트 이름 (stadiumIdx는 내보내지 않는다)
+    return jsonify({
+        "regions": [
+            {
+                "name": region,
+                "facilities": [
+                    {"name": f, "courts": list(FACILITIES[f]), "note": FACILITY_NOTES.get(f)}
+                    for f in names
+                ],
+            }
+            for region, names in REGIONS.items()
+        ]
+    })
 
 
 @app.get("/api/search")
@@ -208,28 +236,36 @@ def api_search():
     if time_start and time_end and time_end <= time_start:
         return jsonify({"error": "종료 시간은 시작 시간보다 이후여야 합니다"}), 400
 
+    targets = [
+        (facility_name, court_label, stadium_idx)
+        for facility_name, courts in FACILITIES.items()
+        if not selected or facility_name in selected
+        for court_label, stadium_idx in courts.items()
+    ]
+    try:
+        with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+            fetched = list(pool.map(lambda t: _fetch_range_cached(t[2], start, end), targets))
+    except requests.RequestException:
+        return jsonify({"error": "화성시 통합예약시스템에서 예약 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."}), 502
+
     results = []
-    for facility_name, courts in FACILITIES.items():
-        if selected and facility_name not in selected:
-            continue
-        for court_label, stadium_idx in courts.items():
-            slots = _fetch_range_cached(stadium_idx, start, end)
-            available = [s for s in slots if s.status == "AVAILABLE"]
-            # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김
-            if time_start:
-                available = [s for s in available if s.end > time_start]
-            if time_end:
-                available = [s for s in available if s.begin < time_end]
-            for slot in available:
-                results.append(
-                    {
-                        "facility": facility_name,
-                        "court": court_label,
-                        "date": slot.date,
-                        "begin": slot.begin,
-                        "end": slot.end,
-                    }
-                )
+    for (facility_name, court_label, _), slots in zip(targets, fetched):
+        available = [s for s in slots if s.status == "AVAILABLE"]
+        # 시간대 필터: 선택한 시간 구간과 겹치는 슬롯만 남김
+        if time_start:
+            available = [s for s in available if s.end > time_start]
+        if time_end:
+            available = [s for s in available if s.begin < time_end]
+        for slot in available:
+            results.append(
+                {
+                    "facility": facility_name,
+                    "court": court_label,
+                    "date": slot.date,
+                    "begin": slot.begin,
+                    "end": slot.end,
+                }
+            )
 
     results.sort(key=lambda r: (r["date"], r["begin"], r["facility"], r["court"]))
     return jsonify(

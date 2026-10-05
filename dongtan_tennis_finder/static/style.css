@@ -381,3 +381,44 @@ footer a {
   gap: 6px 16px;
   margin-bottom: 6px;
 }
+
+/* ── 권역별 시설 필터 ── */
+.facility-filter {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.region-group {
+  display: grid;
+  gap: 8px;
+}
+
+.region-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.region-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.region-toggle {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 2px;
+  cursor: pointer;
+}
+
+.region-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
