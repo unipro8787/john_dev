@@ -4,7 +4,7 @@
 
 ## 데이터 소스
 
-**화성시 통합예약시스템 (yeyak.hscity.go.kr)** — 화성시 전체 공공 테니스장 9곳, 24개 코트를 조회한다 (2026-10-06 확장, 이전에는 동탄구 4곳 13면).
+**화성시 통합예약시스템 (yeyak.hscity.go.kr)** — 화성시 전체 공공 테니스장 9곳, 24개 코트를 조회한다 (2026-10-05 확장, 이전에는 동탄구 4곳 13면).
 로그인이 필요 없다. 사이트의 코트 상세페이지 "예약현황" 탭이 내부적으로 호출하는 공개 JSON API
 (`POST /stadium/stadiumReserveUseList.do`)를 그대로 사용한다 (`hscity_client.py`).
 웹앱은 코트별 조회를 동시에 6개씩 보내고, 코트·월 단위 결과를 3분간 캐시한다.
@@ -17,7 +17,7 @@
 
 전체 목록 재확인: `https://yeyak.hscity.go.kr/1053/3026/stadiumList.do?searchKeyword=테니스&recordCountPerPage=100`
 
-### 부천시 (2026-10-06 추가)
+### 부천시 (2026-10-05 추가)
 
 **부천시 공공서비스예약 (reserv.bucheon.go.kr)** — 테니스장 10곳 (원미구 7, 소사구 3). `bucheon_client.py`.
 테니스장 상세 페이지(`/site/main/lending/lendingDetail?lending_info_seq=…&sch_year=…&sch_month=…`)의
@@ -34,7 +34,7 @@
 `/api/facilities`는 `{cities: [{name, booking_url, booking_name, regions: [{name, facilities: [...]}]}]}` 형태,
 `/api/search` 결과 항목에 `city`가 붙는다. `facility`를 지정하지 않으면 화성시 전체를 조회한다.
 
-### 경주시 (2026-10-07 추가, 날짜 단위)
+### 경주시 (2026-10-05 추가, 날짜 단위)
 
 **경주시 통합예약 (www.gyeongju.go.kr/reserve)** — 테니스 15면: 강변(북천) 3~10번, 시민(북천) 2~5번, 건천 1면,
 외동생활체육공원 1·2번. `gyeongju_client.py`. 시설 상세 페이지가 달을 바꿀 때 부르는
@@ -48,7 +48,7 @@
 - 외동은 계절(10~3월 / 4~9월)마다 항목이 나뉘어 있어 코트 값에 두 item_id를 쉼표로 적고 결과를 합친다.
 - 사이트 이름은 지역이 셋이 되어 "테니스코트 빈자리 찾기"로 바꿨다 (검색 제목에는 화성·동탄·부천·경주 유지).
 
-### 서울 강남구 (2026-10-07 추가)
+### 서울 강남구 (2026-10-05 추가)
 
 **강남구 통합예약 (life.gangnam.go.kr)** — 봉은 1~4번, 포이 A·B, 강남세곡체육공원 1~4번 (10면). `gangnam_client.py`.
 robots.txt 전체 허용. 시설예약 화면(`/fmcs/54`, 스크립트 `modules_fmcs_facilities/default/js/default.js`)이
@@ -65,7 +65,7 @@ robots.txt 전체 허용. 시설예약 화면(`/fmcs/54`, 스크립트 `modules_
 - 시간대 응답의 `detail`에는 예약 단체·예약자 실명이 들어 있다. `use_yn`만 읽고 `detail`은 읽지도 저장하지도 않는다.
 - 공공데이터포털 "서울특별시 강남구_테니스장 현황" 데이터셋은 2025-09-04 일회성 자료라 쓰지 않았다.
 
-### 다른 시·구 조사 결과 (2026-10-06)
+### 다른 시·구 조사 결과 (2026-10-05)
 
 로그인 없이 시간대별 현황 공개 + robots.txt 허용 + 접속 차단 장치 없음 조건으로 확인했다.
 불가: 수원·고양 등 경기공유서비스 사용 시군(robots 전체 금지 + NetFunnel), 서울(예약 달력 AJAX에 비정상 접근 차단),
@@ -162,3 +162,13 @@ Render → 서비스 → **Environment** 에서 아래 값을 넣으면 코드 �
 | `CONTACT_EMAIL` | 문의 받을 메일 | 소개·개인정보처리방침의 문의처 |
 
 개인정보처리방침이나 페이지 내용을 바꾸면 `app.py`의 `POLICY_EFFECTIVE`, `PAGES_UPDATED` 날짜도 함께 바꾼다.
+
+### 콘텐츠 페이지 (애드센스 심사 대비, 2026-10-05 추가)
+
+- `/courts` 테니스장 목록, `/courts/<slug>` 테니스장별 페이지 26개 (주소·운영시간·요금·문의처·예약 방법 +
+  앞으로 2주 빈 시간을 `/api/search`로 바로 보여 줌, SportsActivityLocation JSON-LD)
+- `/guide` 예약 가이드 목록, `/guide/<city>` 지역별 예약 방법 4편 (`content.py`의 `GUIDES`, Article JSON-LD)
+- `/terms` 이용약관, `/contact` 문의(`CONTACT_EMAIL` 필요), 사용자 404 페이지, 위쪽 주 메뉴
+- 시설 정보는 `python tools/collect_facility_info.py`가 각 기관 공개 상세 페이지에서 모아 `data/facility_info.json`에 저장한다.
+  요금·운영시간이 바뀌면 다시 돌리고 결과를 확인한 뒤 커밋한다. 시설 페이지 주소(`content.FACILITY_SLUGS`)는 바꾸지 않는다.
+- 가이드 문구는 공식 안내를 바탕으로 직접 정리한 글이다. 규정이 바뀌면 `GUIDES`와 `GUIDE_CHECKED`를 함께 고친다.

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}문의 · {{ site_name }}{% endblock %}
+{% block description %}{{ site_name }}에 잘못된 정보 신고, 테니스장 추가 요청, 제휴·광고 문의를 보내는 방법입니다.{% endblock %}
+
+{% block content %}
+<article class="panel info">
+  <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › 문의</nav>
+  <h2>문의</h2>
+  <p>{{ site_name }}는 동탄의 테니스 동호인이 혼자 운영하는 서비스입니다. 아래 내용은 언제든 알려 주세요.</p>
+  <ul>
+    <li>빈 시간이 실제와 다르거나 요금·운영시간 정보가 틀린 경우</li>
+    <li>추가했으면 하는 테니스장이나 지역</li>
+    <li>사이트가 잘 안 열리거나 화면이 깨지는 경우</li>
+    <li>제휴·광고 문의</li>
+  </ul>
+  {% if contact_email %}
+  <p class="contact-mail">이메일: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+  <p class="muted">보통 2~3일 안에 답장드립니다. 특정 테니스장 이야기라면 테니스장 이름과 날짜·시간을 함께 적어 주시면 빨리 확인할 수 있습니다.</p>
+  {% else %}
+  <p class="muted">문의 메일 주소를 준비하고 있습니다.</p>
+  {% endif %}
+  <p class="muted">예약, 결제, 환불은 이 사이트가 처리하지 않습니다. 각 테니스장 예약 사이트나 시설 문의처로 연락해 주세요. 시설별 문의처는 <a href="{{ url_for('courts_index') }}">테니스장 목록</a>의 각 테니스장 페이지에 있습니다.</p>
+</article>
+{% endblock %}

@@ -78,7 +78,7 @@ FACILITY_NOTES: dict[str, str] = {
 assert sorted(f for names in REGIONS.values() for f in names) == sorted(FACILITIES), "REGIONS와 FACILITIES가 어긋남"
 
 
-# ── 부천시 공공서비스예약(reserv.bucheon.go.kr) 테니스장 (2026-10-06 기준, 접수중 10곳)
+# ── 부천시 공공서비스예약(reserv.bucheon.go.kr) 테니스장 (2026-10-05 기준, 접수중 10곳)
 # lendingList?lending_inst_nm=tennis 목록에서 확인한 lending_info_seq 값. 부천은 코트별이 아니라
 # 시설 단위로 시간대별 예약가능 여부를 보여 주므로 코트 이름 자리에 "시설 대관"을 둔다.
 # 오정레포츠센터 테니스장(188)은 접수종료 상태라 제외했다.
@@ -117,7 +117,7 @@ FACILITY_NOTES["부천실내테니스장"] = "실내"
 assert sorted(f for names in BUCHEON_REGIONS.values() for f in names) == sorted(BUCHEON_FACILITIES), "부천 REGIONS 어긋남"
 
 
-# ── 경주시 통합예약(www.gyeongju.go.kr/reserve) 테니스장 (2026-10-07 기준)
+# ── 경주시 통합예약(www.gyeongju.go.kr/reserve) 테니스장 (2026-10-05 기준)
 # sports_facilities/list.jsp 목록에서 "인터넷" 예약인 일반 테니스 코트만 넣었다.
 # 방문 예약(강변 1·2코트), 전화 예약(시민 1코트), 소프트테니스장(정구)은 제외.
 # 경주는 날짜 단위로만 예약 가능 여부를 공개하므로 결과도 "그날 빈 시간 있음"으로만 보여 준다.
@@ -140,7 +140,7 @@ GYEONGJU_REGIONS: dict[str, list[str]] = {
 assert sorted(f for names in GYEONGJU_REGIONS.values() for f in names) == sorted(GYEONGJU_FACILITIES), "경주 REGIONS 어긋남"
 
 
-# ── 서울 강남구 통합예약(life.gangnam.go.kr) 테니스장 (2026-10-07 기준)
+# ── 서울 강남구 통합예약(life.gangnam.go.kr) 테니스장 (2026-10-05 기준)
 # rest/common/company(type=F) → part → place 로 확인한 코드. 값은 "company:part:place".
 # 매월 25일까지 다음 달을 온라인으로 받고, 그 뒤 남은 시간은 각 시설에 전화 예약 (gangnam_client 참고).
 GANGNAM_FACILITIES: dict[str, dict[str, str]] = {

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}공공 테니스장 예약 가이드 · 화성·부천·경주·강남{% endblock %}
+{% block description %}화성시, 부천시, 경주시, 서울 강남구 공공 테니스장을 예약하는 방법을 지역별로 정리했습니다. 예약이 열리는 날짜, 결제·취소 규정, 문의처를 확인하세요.{% endblock %}
+
+{% block content %}
+<article class="panel info">
+  <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › 예약 가이드</nav>
+  <h2>공공 테니스장 예약 가이드</h2>
+  <p>지역마다 예약 사이트, 예약이 열리는 날짜, 결제와 취소 규정이 모두 다릅니다. 처음 예약하는 지역이라면 아래 가이드를 먼저 읽어 보세요.</p>
+  <ul class="guide-list">
+    {% for slug, g in guides.items() %}
+    <li>
+      <a href="{{ url_for('guide_page', slug=slug) }}"><b>{{ g.title }}</b></a>
+      <p class="muted">{{ g.summary }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  <h3>어느 지역이든 공통으로 알아 두면 좋은 것</h3>
+  <ul>
+    <li>공공 테니스장은 대부분 회원가입과 로그인이 필요합니다. 예약이 열리는 날 전에 미리 가입해 두세요.</li>
+    <li>예약 뒤 정해진 시간 안에 결제하지 않으면 자동으로 취소되는 곳이 많습니다. 신청했다면 결제까지 바로 마치세요.</li>
+    <li>결제 기한이 지나 취소되거나 다른 사람이 취소한 자리는 다시 열립니다. 원하는 시간이 찼더라도 이용일 전까지 가끔 다시 확인해 보세요.</li>
+    <li>비가 오거나 시설 사정으로 이용하지 못하면 환불해 주는 곳이 많지만 규정은 지역마다 다릅니다.</li>
+  </ul>
+  <p class="muted source">각 지역 예약 사이트의 공식 안내를 바탕으로 정리했습니다 ({{ checked }} 확인). 규정은 바뀔 수 있으니 예약 전에 공식 안내를 함께 확인하세요.</p>
+</article>
+{% endblock %}

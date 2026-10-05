@@ -41,6 +41,13 @@
     {% block header %}
     <a class="brand-link" href="{{ url_for('index') }}"><h1>🎾 테니스코트 빈자리 찾기</h1></a>
     {% endblock %}
+    <nav class="site-nav" aria-label="주 메뉴">
+      {% set ep = request.endpoint %}
+      <a href="{{ url_for('index') }}"{% if ep == 'index' %} aria-current="page"{% endif %}>빈 코트 검색</a>
+      <a href="{{ url_for('courts_index') }}"{% if ep in ('courts_index', 'court_page') %} aria-current="page"{% endif %}>테니스장</a>
+      <a href="{{ url_for('guide_index') }}"{% if ep in ('guide_index', 'guide_page') %} aria-current="page"{% endif %}>예약 가이드</a>
+      <a href="{{ url_for('about') }}"{% if ep == 'about' %} aria-current="page"{% endif %}>소개</a>
+    </nav>
   </header>
 
   <main>
@@ -50,7 +57,11 @@
   <footer>
     <nav class="footer-nav" aria-label="사이트 정보">
       <a href="{{ url_for('index') }}">빈 코트 검색</a>
+      <a href="{{ url_for('courts_index') }}">테니스장 목록</a>
+      <a href="{{ url_for('guide_index') }}">예약 가이드</a>
       <a href="{{ url_for('about') }}">서비스 소개</a>
+      <a href="{{ url_for('contact') }}">문의</a>
+      <a href="{{ url_for('terms') }}">이용약관</a>
       <a href="{{ url_for('privacy') }}">개인정보처리방침</a>
     </nav>
     <p>데이터 출처: <a href="https://yeyak.hscity.go.kr" target="_blank" rel="noopener">화성시 통합예약시스템</a>, <a href="https://reserv.bucheon.go.kr" target="_blank" rel="noopener">부천시 공공서비스예약</a>, <a href="https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp" target="_blank" rel="noopener">경주시 통합예약</a>, <a href="https://life.gangnam.go.kr/fmcs/54" target="_blank" rel="noopener">강남구 통합예약</a> · 예약은 해당 사이트에서 직접 하셔야 합니다.</p>

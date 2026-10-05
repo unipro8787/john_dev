@@ -31,6 +31,7 @@ import gangnam_client
 import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
+from content import CITY_SLUGS, FACILITY_BY_SLUG, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
 FETCHERS = {
@@ -94,8 +95,8 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 
 SITE_NAME = "테니스코트 빈자리 찾기"
-POLICY_EFFECTIVE = "2026-10-07"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-07"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-05"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -141,6 +142,7 @@ def _inject_site():
         "facility_count": len(ALL_FACILITIES),
         "court_count": sum(len(c) for c in ALL_FACILITIES.values()),
         "policy_effective": POLICY_EFFECTIVE,
+        "city_slugs": CITY_SLUGS,
     }
 
 
@@ -159,6 +161,82 @@ def privacy():
     return render_template("privacy.html")
 
 
+@app.get("/courts")
+def courts_index():
+    return render_template("courts.html", facility_list=facility_entries())
+
+
+@app.get("/courts/<slug>")
+def court_page(slug: str):
+    f = FACILITY_BY_SLUG.get(slug)
+    if not f:
+        abort(404)
+    site = _site_url()
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "SportsActivityLocation",
+        "name": f["name"],
+        "url": f"{site}{url_for('court_page', slug=slug)}",
+        "sport": "Tennis",
+        "areaServed": f["city"],
+    }
+    info = f["info"]
+    if info.get("address"):
+        jsonld["address"] = {"@type": "PostalAddress", "streetAddress": info["address"], "addressCountry": "KR"}
+    if info.get("lat"):
+        jsonld["geo"] = {"@type": "GeoCoordinates", "latitude": info["lat"], "longitude": info["lng"]}
+    if info.get("phone"):
+        jsonld["telephone"] = info["phone"]
+    nearby = [x for x in facility_entries() if x["city"] == f["city"] and x["slug"] != slug][:6]
+    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, collected=INFO_COLLECTED)
+
+
+@app.get("/guide")
+def guide_index():
+    return render_template("guides.html", guides=GUIDES, checked=GUIDE_CHECKED)
+
+
+@app.get("/guide/<slug>")
+def guide_page(slug: str):
+    g = GUIDES.get(slug)
+    if not g:
+        abort(404)
+    city = next(c for c in CITIES if c["name"] == g["city"])
+    site = _site_url()
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": g["title"],
+        "description": g["summary"],
+        "inLanguage": "ko",
+        "dateModified": GUIDE_CHECKED,
+        "mainEntityOfPage": f"{site}{url_for('guide_page', slug=slug)}",
+        "publisher": {"@type": "Organization", "name": SITE_NAME},
+    }
+    return render_template(
+        "guide.html", g=g, jsonld=jsonld, checked=GUIDE_CHECKED,
+        city_facilities=[x for x in facility_entries() if x["city"] == g["city"]],
+        booking_url=city["booking_url"], booking_name=city["booking_name"],
+    )
+
+
+@app.get("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+@app.get("/contact")
+def contact():
+    return render_template("contact.html")
+
+
+@app.errorhandler(404)
+def not_found(_e):
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "not found"}), 404
+    return render_template("404.html"), 404
+
+
 @app.get("/robots.txt")
 def robots_txt():
     body = "\n".join([
@@ -174,10 +252,20 @@ def robots_txt():
 @app.get("/sitemap.xml")
 def sitemap_xml():
     site = _site_url()
-    pages = [("index", "1.0"), ("about", "0.6"), ("privacy", "0.3")]
+    pages = [
+        (url_for("index"), "1.0"),
+        (url_for("courts_index"), "0.8"),
+        (url_for("guide_index"), "0.8"),
+        *[(url_for("guide_page", slug=s), "0.7") for s in GUIDES],
+        *[(url_for("court_page", slug=f["slug"]), "0.7") for f in facility_entries()],
+        (url_for("about"), "0.5"),
+        (url_for("contact"), "0.3"),
+        (url_for("terms"), "0.2"),
+        (url_for("privacy"), "0.2"),
+    ]
     urls = "".join(
-        f"<url><loc>{site}{url_for(name)}</loc><lastmod>{PAGES_UPDATED}</lastmod><priority>{prio}</priority></url>"
-        for name, prio in pages
+        f"<url><loc>{site}{path}</loc><lastmod>{PAGES_UPDATED}</lastmod><priority>{prio}</priority></url>"
+        for path, prio in pages
     )
     body = ('<?xml version="1.0" encoding="UTF-8"?>'
             f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ f.name }} 예약·빈 코트 · {{ f.city }} 공공 테니스장{% endblock %}
+{% block description %}{{ f.city }} {{ f.name }}{% if f.info.address %}({{ f.info.address }}){% endif %}의 운영시간, 요금, 문의처, 예약 방법과 앞으로 2주 동안 예약 가능한 시간을 확인하세요.{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">{{ jsonld | tojson }}</script>
+{% endblock %}
+
+{% block content %}
+<article class="panel info">
+  <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › <a href="{{ url_for('courts_index') }}">테니스장 목록</a> › {{ f.city }} › {{ f.name }}</nav>
+  <h2>{{ f.name }}</h2>
+  <p class="muted">{{ f.city }} {{ f.region }} · {% if f.per_facility %}시설 단위 예약{% else %}{{ f.courts | join(', ') }}{% endif %}</p>
+
+  <dl class="facts">
+    {% if f.info.address %}<dt>주소</dt><dd>{{ f.info.address }}{% if f.info.lat %} · <a href="https://map.kakao.com/link/map/{{ f.name | urlencode }},{{ f.info.lat }},{{ f.info.lng }}" target="_blank" rel="noopener">카카오맵에서 보기</a>{% endif %}</dd>{% endif %}
+    {% if f.info.subway %}<dt>대중교통</dt><dd>{{ f.info.subway }}</dd>{% endif %}
+    {% if f.info.hours %}<dt>운영시간</dt><dd>{{ f.info.hours }}{% if f.info.slot_unit %} ({{ f.info.slot_unit }} 단위){% endif %}</dd>{% endif %}
+    {% if f.info.days %}<dt>운영 요일</dt><dd>{{ f.info.days }}</dd>{% endif %}
+    {% if f.info.fee %}<dt>요금</dt><dd>{{ f.info.fee }}</dd>{% endif %}
+    {% if f.info.payment %}<dt>결제</dt><dd>{{ f.info.payment }}</dd>{% endif %}
+    {% if f.info.rules %}<dt>예약 제한</dt><dd>{{ f.info.rules }}</dd>{% endif %}
+    {% if f.info.note %}<dt>참고</dt><dd>{{ f.info.note }}</dd>{% endif %}
+    {% if f.info.confirm_type %}<dt>승인 방식</dt><dd>{{ f.info.confirm_type }}</dd>{% endif %}
+    {% if f.info.operator %}<dt>운영</dt><dd>{{ f.info.operator }}</dd>{% endif %}
+    {% if f.info.phone %}<dt>문의</dt><dd>{{ f.info.phone }}</dd>{% endif %}
+    <dt>예약</dt><dd><a href="{{ f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }}</a> · <a href="{{ url_for('guide_page', slug=f.city_slug) }}">{{ f.city }} 예약 방법 보기</a></dd>
+  </dl>
+
+  <h3>앞으로 2주 빈 시간</h3>
+  <div id="court-availability" class="court-availability" data-facility="{{ f.name }}">
+    <p class="muted">예약 현황을 불러오는 중입니다…</p>
+  </div>
+  {% if f.day_only %}<p class="muted">경주시 통합예약은 날짜별로 빈 시간이 있는지만 공개해서, 몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인해야 합니다.</p>{% endif %}
+  {% if f.city == '서울 강남구' %}<p class="muted">☎ 표시는 온라인 접수(매월 25일까지)가 끝나 시설에 전화로 예약하는 빈 시간입니다.</p>{% endif %}
+  {% if f.per_facility %}<p class="muted">부천 예약 사이트는 코트별이 아니라 시설 단위로 예약 가능 여부를 보여 줍니다.</p>{% endif %}
+  <p><a class="cta" href="{{ url_for('index') }}">다른 날짜·시간으로 검색하기</a></p>
+
+  {% if nearby %}
+  <h3>같은 지역의 다른 테니스장</h3>
+  <ul class="court-links">
+    {% for n in nearby %}<li><a href="{{ url_for('court_page', slug=n.slug) }}">{{ n.name }}</a></li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="muted source">정보 출처: <a href="{{ f.info.source_url or f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }} 시설 안내</a>{% if collected %} ({{ collected }} 확인){% endif %}. 요금과 운영시간은 바뀔 수 있으니 예약 전에 공식 안내를 확인하세요.</p>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const box = document.getElementById("court-availability");
+  const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const start = new Date();
+  const end = new Date(start);
+  end.setDate(end.getDate() + 13);
+  const params = new URLSearchParams({ start: iso(start), end: iso(end), facility: box.dataset.facility });
+  const el = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  };
+  fetch(`/api/search?${params}`)
+    .then((r) => r.json())
+    .then((data) => {
+      box.innerHTML = "";
+      if (!data.results || !data.results.length) {
+        box.appendChild(el("p", "muted", "앞으로 2주 동안 예약 가능한 시간이 없습니다. 예약이 열리기 전이거나 모두 찼을 수 있어요."));
+        return;
+      }
+      const multiCourt = new Set(data.results.map((r) => r.court)).size > 1;
+      const byDate = new Map();
+      data.results.forEach((r) => {
+        if (!byDate.has(r.date)) byDate.set(r.date, []);
+        byDate.get(r.date).push(r);
+      });
+      for (const [date, items] of byDate) {
+        const row = el("div", "avail-row");
+        const d = new Date(date + "T00:00:00");
+        row.appendChild(el("div", "avail-date", `${d.getMonth() + 1}/${d.getDate()} (${DOW[d.getDay()]})`));
+        const slots = el("div", "time-slots");
+        items.sort((a, b) => a.begin.localeCompare(b.begin) || a.court.localeCompare(b.court));
+        items.forEach((s) => {
+          const court = multiCourt ? ` · ${s.court}` : "";
+          const label = s.day_only ? `빈 시간 있음${court}` : `${s.phone_only ? "☎ " : ""}${s.begin}~${s.end}${court}`;
+          slots.appendChild(el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""), label));
+        });
+        row.appendChild(slots);
+        box.appendChild(row);
+      }
+    })
+    .catch(() => {
+      box.innerHTML = "";
+      box.appendChild(el("p", "muted", "예약 현황을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요."));
+    });
+})();
+</script>
+{% endblock %}

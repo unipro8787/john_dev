@@ -1,0 +1,222 @@
+{
+  "collected": "2026-10-05",
+  "facilities": {
+    "여울공원 테니스장": {
+      "address": "경기 화성시 동탄구 오산동 1060",
+      "lat": 37.195704,
+      "lng": 127.084448,
+      "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임만 예약가능합니다.",
+      "note": "동절기 적설 시 별도의 제설 작업 불가",
+      "phone": "031-355-1292",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=193"
+    },
+    "금반저류지 테니스장": {
+      "hours": "[평일] 14:00~22:00 [휴일] 14:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임 예약가능합니다.",
+      "note": "동절기 적설 시 별도의 제설 작업 불가",
+      "phone": "031-355-1292",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=212"
+    },
+    "왕배산체육공원 테니스장": {
+      "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "8.30.개장/ 8.27. 접수 시작/1일 1타임 예약가능",
+      "phone": "031-355-1292",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=230"
+    },
+    "중동 테니스장": {
+      "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임 예약 가능",
+      "phone": "031-355-1292",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=245"
+    },
+    "돌모루 근린공원 테니스장": {
+      "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임 예약가능합니다.",
+      "note": "8번 코트 1면만 온라인 예약제 적용, 1~7번 코트는 현장 발권하여 이용",
+      "phone": "031-355-1292",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=213"
+    },
+    "비봉체육공원 테니스장": {
+      "hours": "[평일] 12:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임만 예약가능합니다.",
+      "note": "[평일] (무료개방) 06~12시 (온라인예약, 유료) 12~22시 [휴일] (온라인예약, 무료) 06~09시 (무료개방) 09~12시 (온라인예약, 유료) 12~22시",
+      "phone": "031-8059-3274",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=207"
+    },
+    "도원체육공원 테니스장": {
+      "hours": "[평일] 12:00~17:00 [휴일] 이용불가",
+      "operator": "화성도시공사 체육시설",
+      "payment": "-",
+      "note": "[평일] - 자유개방: 06:00 ~ 12:00 - 온라인예약: 12:00 ~ 17:00 - 현장예약: 17:00 ~ 22:00 [휴일] - 현장예약: 06:00 ~ 22:00",
+      "phone": "031-8059-3274",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=226"
+    },
+    "매송안보테마공원 테니스장": {
+      "hours": "[평일] 이용불가 [휴일] 06:00~16:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임만 예약가능합니다.",
+      "note": "주말 및 공휴일 08:00 ~ 14:00 (2시간 단위) 이용 가능합니다. ※ 테니스장 개장시간 확대 주말 및 공휴일 이용시간 06:00 ~ 16:00 (2시간 단위)로 확대 적용됩니다(2025.07.09. 10시~)",
+      "phone": "031-8059-3274",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=209"
+    },
+    "경기화성바이오밸리(마도) 테니스장": {
+      "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
+      "operator": "화성도시공사 체육시설",
+      "payment": "온라인 결제",
+      "rules": "1일 1타임만 예약가능합니다.",
+      "phone": "031-8059-3274",
+      "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=205"
+    },
+    "복사골테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=111&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "원미테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=112&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "종합운동장테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=115&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "부천체육관테니스장(하드)": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=192&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "부천실내테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 30,000원 - 평일(야간) : 30,000원 - 공휴일 주간(국경일 포함) :40,000원 - 공휴일 야간(국경일 포함) :40,000원",
+      "operator": "부천시테니스협회",
+      "phone": "032-325-4568",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=195&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "해그늘체육공원 테니스장": {
+      "hours": "10:00~18:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 0원 - 평일(야간) : 0원 - 공휴일 주간(국경일 포함) :0원 - 공휴일 야간(국경일 포함) :0원 - 평일전용대관(주간) :0원 - 평일전용대관(야간) :0원 - 공휴일전용대관(주간) : 0원 - 공휴일전용대관(야간) : 0원",
+      "operator": "부천시체육회",
+      "phone": "070-4489-6224",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=194&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "해그늘체육공원 테니스장(인조잔디)": {
+      "hours": "10:00~18:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 0원 - 평일(야간) : 원 - 공휴일 주간(국경일 포함) :0원 - 공휴일 야간(국경일 포함) :원 - 평일전용대관(주간) :원 - 평일전용대관(야간) :원 - 공휴일전용대관(주간) : 원 - 공휴일전용대관(야간) : 원",
+      "operator": "부천시체육회",
+      "phone": "070-4489-6224",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=205&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "성주산체육공원테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=116&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "소사배수지테니스장": {
+      "hours": "06:00~21:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=114&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "남부수자원테니스장": {
+      "hours": "06:00~22:00",
+      "slot_unit": "2시간",
+      "days": "월,화,수,목,금,토,일",
+      "fee": "- 평일(주간) : 6,000원 - 평일(야간) : 11,000원 - 공휴일 주간(국경일 포함) :8,000원 - 공휴일 야간(국경일 포함) :15,000원 - 평일전용대관(주간) :30,000원 - 평일전용대관(야간) :45,000원 - 공휴일전용대관(주간) : 40,000원 - 공휴일전용대관(야간) : 60,000원",
+      "operator": "부천시체육회",
+      "phone": "070-7711-5309",
+      "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=193&inst_cate=01&lending_inst_nm=tennis"
+    },
+    "강변테니스장(북천)": {
+      "address": "경북 경주시 구황동 883-99",
+      "fee": "4월~9월 하절기 : 1시간 1500원",
+      "phone": "054-750-8591~2",
+      "source_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/facility_view.jsp?mem_id=B0000031&item_id=T0000260"
+    },
+    "시민테니스장(북천)": {
+      "address": "경북 경주시 윗동천안길 25-1",
+      "fee": "4월~9월 하절기 : 1시간 1500원",
+      "phone": "054-750-8591~2",
+      "source_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/facility_view.jsp?mem_id=B0000031&item_id=T0000269"
+    },
+    "건천테니스장": {
+      "address": "경북 경주시 건천읍 천포방내길 34",
+      "fee": "테니스 : 1시간 1500원",
+      "phone": "054-751-9681",
+      "source_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/facility_view.jsp?mem_id=B0000033&item_id=T0000280"
+    },
+    "외동생활체육공원 테니스장": {
+      "address": "외동읍 입실리 297번지",
+      "fee": "테니스장 : 1시간 1500원",
+      "phone": "054-779-8115",
+      "source_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/facility_view.jsp?mem_id=B0000027&item_id=T0000341"
+    },
+    "봉은테니스장": {
+      "address": "서울 강남구 삼성동 75",
+      "hours": "06:00~22:00",
+      "subway": "지하철9호선 삼성중앙역 4번출구, 봉은사역 1번출구",
+      "phone": "02-2176-0890",
+      "confirm_type": "심의승인",
+      "receipt_period_example": "2026-10-15~2026-10-25",
+      "source_url": "https://life.gangnam.go.kr/fmcs/107"
+    },
+    "포이테니스장": {
+      "hours": "06:00~22:00",
+      "phone": "02-2176-0876",
+      "confirm_type": "심의승인",
+      "receipt_period_example": "2026-10-15~2026-10-25",
+      "source_url": "https://life.gangnam.go.kr/fmcs/108"
+    },
+    "강남세곡체육공원 테니스장": {
+      "subway": "지하철8호선 복정역 3번출구 도보 14분(강남세곡체육공원 내)",
+      "phone": "02-2176-0870",
+      "confirm_type": "심의승인",
+      "receipt_period_example": "2026-10-12~2026-10-25",
+      "source_url": "https://life.gangnam.go.kr/fmcs/501"
+    }
+  }
+}

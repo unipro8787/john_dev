@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}페이지를 찾을 수 없습니다 · {{ site_name }}{% endblock %}
+{% block description %}요청하신 페이지를 찾을 수 없습니다.{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<article class="panel info">
+  <h2>페이지를 찾을 수 없습니다</h2>
+  <p>주소가 바뀌었거나 없는 페이지입니다. 아래에서 원하는 곳으로 이동해 주세요.</p>
+  <ul>
+    <li><a href="{{ url_for('index') }}">빈 코트 검색</a></li>
+    <li><a href="{{ url_for('courts_index') }}">테니스장 목록</a></li>
+    <li><a href="{{ url_for('guide_index') }}">예약 가이드</a></li>
+  </ul>
+</article>
+{% endblock %}
