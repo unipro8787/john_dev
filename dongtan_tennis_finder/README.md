@@ -17,6 +17,31 @@
 
 전체 목록 재확인: `https://yeyak.hscity.go.kr/1053/3026/stadiumList.do?searchKeyword=테니스&recordCountPerPage=100`
 
+### 부천시 (2026-10-06 추가)
+
+**부천시 공공서비스예약 (reserv.bucheon.go.kr)** — 테니스장 10곳 (원미구 7, 소사구 3). `bucheon_client.py`.
+테니스장 상세 페이지(`/site/main/lending/lendingDetail?lending_info_seq=…&sch_year=…&sch_month=…`)의
+"예약현황" 달력이 로그인 없이 날짜·시간대별로 예약가능(`li.grn`)/예약완료(`li.red`)를 그려 준다.
+코트별이 아니라 **시설 단위**라 코트 이름 자리에 "시설 대관"으로 표시한다.
+
+- 예약완료 칸의 예약자 이름 일부(예: 임*정)는 파싱·저장하지 않는다 (상태 class만 읽음).
+- 다음 달 예약은 매달 20일 10시에 열려서, 그 전에는 다음 달 달력이 비어 있다.
+- 오정레포츠센터 테니스장(188)은 접수종료라 제외. 목록 재확인: `lendingList?lending_inst_nm=tennis&inst_cate=01`
+- 부천 상세 페이지는 응답이 2초 안팎이라, 10곳 첫 조회가 4초쯤 걸린다 (이후 3분 캐시).
+
+화면 맨 위 "지역" 탭에서 화성시/부천시를 고르고, 도시마다 고른 시설을 따로 기억한다
+(localStorage `tennisFinder.v3`, 예전 `selectedFacilities.v2` 값은 화성시 선택으로 옮겨 담음).
+`/api/facilities`는 `{cities: [{name, booking_url, booking_name, regions: [{name, facilities: [...]}]}]}` 형태,
+`/api/search` 결과 항목에 `city`가 붙는다. `facility`를 지정하지 않으면 화성시 전체를 조회한다.
+
+### 다른 시·구 조사 결과 (2026-10-06)
+
+로그인 없이 시간대별 현황 공개 + robots.txt 허용 + 접속 차단 장치 없음 조건으로 확인했다.
+불가: 수원·고양 등 경기공유서비스 사용 시군(robots 전체 금지 + NetFunnel), 서울(예약 달력 AJAX에 비정상 접근 차단),
+의왕·세종·부산 스포원(robots 전체 금지), 고양도시관리공사(`/rent/` 금지), 용인(본인인증 후에만 시간대 표시),
+인천(월 단위 접수, 시간대 비공개), 오산(네이버 예약), 성남(테니스장 미등록), 평택·안양·대구·광주·대전·울산(온라인 실시간 시스템 미확인).
+조건부: 경주(날짜 단위 예약가능 여부만 공개), 서울 강남구(공공데이터포털 "강남구_테니스장 현황" API, 키 신청 후 확인 필요).
+
 ### 수원은 왜 없나
 
 수원시 공공 테니스장(만석공원, 나촌배수지 등)은 수원시 홈페이지(suwon.go.kr/web/reserv/faci)에 "외부예약"으로만

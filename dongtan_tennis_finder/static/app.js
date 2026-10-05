@@ -8,11 +8,12 @@
   const timeStartInput = document.getElementById("time-start");
   const timeEndInput = document.getElementById("time-end");
   const facilityFilter = document.getElementById("facility-filter");
+  const cityTabs = document.getElementById("city-tabs");
   const searchBtn = document.getElementById("search-btn");
   const statusArea = document.getElementById("status-area");
   const resultsEl = document.getElementById("results");
 
-  const selectedFacilities = new Set();
+  let selectedFacilities = new Set();
   let allFacilities = [];
 
   function toISODate(d) {
@@ -63,27 +64,42 @@
     });
   });
 
-  const FACILITY_KEY = "selectedFacilities.v2";
+  const PREF_KEY = "tennisFinder.v3"; // { city, selected: { 도시명: [시설명...] } }
+  const OLD_KEY = "selectedFacilities.v2"; // 화성만 있던 시절의 선택값 (한 번 옮겨 담는다)
+  let cities = [];
+  let currentCity = null;
+  const selectedByCity = new Map(); // 도시명 → Set(시설명)
 
-  function saveSelection() {
+  function savePrefs() {
     try {
-      localStorage.setItem(FACILITY_KEY, JSON.stringify([...selectedFacilities]));
+      const selected = {};
+      for (const [city, set] of selectedByCity) selected[city] = [...set];
+      localStorage.setItem(PREF_KEY, JSON.stringify({ city: currentCity, selected }));
     } catch (e) {
       // 저장소를 못 쓰는 환경(사생활 보호 모드 등)에서는 기억만 못 할 뿐 검색은 그대로 된다
     }
   }
 
-  function loadSelection(names) {
+  function loadPrefs() {
+    let prefs = null;
     try {
-      const saved = JSON.parse(localStorage.getItem(FACILITY_KEY) || "null");
-      if (Array.isArray(saved)) {
-        const valid = saved.filter((n) => names.includes(n));
-        if (valid.length) return new Set(valid);
+      prefs = JSON.parse(localStorage.getItem(PREF_KEY) || "null");
+      if (!prefs) {
+        const old = JSON.parse(localStorage.getItem(OLD_KEY) || "null");
+        if (Array.isArray(old)) prefs = { city: "화성시", selected: { 화성시: old } };
       }
     } catch (e) {
-      // 저장된 값이 깨졌으면 무시하고 전체 선택으로 시작
+      prefs = null;
     }
-    return new Set(names);
+    cities.forEach((city) => {
+      const names = city.regions.flatMap((r) => r.facilities.map((f) => f.name));
+      const saved = prefs && prefs.selected && Array.isArray(prefs.selected[city.name])
+        ? prefs.selected[city.name].filter((n) => names.includes(n))
+        : null;
+      selectedByCity.set(city.name, new Set(saved && saved.length ? saved : names));
+    });
+    const savedCity = prefs && cities.some((c) => c.name === prefs.city) ? prefs.city : null;
+    currentCity = savedCity || cities[0].name;
   }
 
   function syncRegionToggles() {
@@ -104,14 +120,34 @@
     chip.setAttribute("aria-pressed", String(on));
   }
 
-  async function loadFacilities() {
-    const res = await fetch("/api/facilities");
-    const data = await res.json();
-    allFacilities = data.regions.flatMap((r) => r.facilities.map((f) => f.name));
-    const initial = loadSelection(allFacilities);
+  function renderCityTabs() {
+    cityTabs.innerHTML = "";
+    cities.forEach((city) => {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "city-tab" + (city.name === currentCity ? " active" : "");
+      tab.setAttribute("aria-pressed", String(city.name === currentCity));
+      const courts = city.regions.reduce((n, r) => n + r.facilities.reduce((m, f) => m + f.courts.length, 0), 0);
+      tab.innerHTML = `${city.name} <span>${courts}</span>`;
+      tab.addEventListener("click", () => {
+        if (city.name === currentCity) return;
+        currentCity = city.name;
+        renderCityTabs();
+        renderFacilities();
+        savePrefs();
+        runSearch();
+      });
+      cityTabs.appendChild(tab);
+    });
+  }
+
+  function renderFacilities() {
+    const city = cities.find((c) => c.name === currentCity);
+    selectedFacilities = selectedByCity.get(city.name);
+    allFacilities = city.regions.flatMap((r) => r.facilities.map((f) => f.name));
     facilityFilter.innerHTML = "";
 
-    data.regions.forEach((region) => {
+    city.regions.forEach((region) => {
       const group = document.createElement("div");
       group.className = "region-group";
 
@@ -120,7 +156,7 @@
       const title = document.createElement("span");
       title.className = "region-name";
       const courtCount = region.facilities.reduce((n, f) => n + f.courts.length, 0);
-      title.textContent = `${region.name} · ${courtCount}면`;
+      title.textContent = `${region.name} · ${courtCount}${city.name === "부천시" ? "곳" : "면"}`;
       const toggle = document.createElement("button");
       toggle.type = "button";
       toggle.className = "region-toggle";
@@ -134,13 +170,13 @@
         chip.type = "button";
         chip.className = "facility-chip";
         chip.dataset.name = f.name;
-        chip.textContent = f.name.replace(/ 테니스장$/, "");
-        chip.title = `${f.name} · ${f.courts.length}면${f.note ? " · " + f.note : ""}`;
-        setChip(chip, initial.has(f.name));
+        chip.textContent = f.name.replace(/ ?테니스장$/, "");
+        chip.title = `${f.name}${f.note ? " · " + f.note : ""}`;
+        setChip(chip, selectedFacilities.has(f.name));
         chip.addEventListener("click", () => {
           setChip(chip, !selectedFacilities.has(f.name));
           syncRegionToggles();
-          saveSelection();
+          savePrefs();
         });
         chips.appendChild(chip);
       });
@@ -151,12 +187,27 @@
         const allOn = list.every((c) => selectedFacilities.has(c.dataset.name));
         list.forEach((c) => setChip(c, !allOn));
         syncRegionToggles();
-        saveSelection();
+        savePrefs();
       });
 
       facilityFilter.appendChild(group);
     });
+
+    const note = document.createElement("p");
+    note.className = "city-note";
+    note.innerHTML = `예약은 <a href="${city.booking_url}" target="_blank" rel="noopener">${city.booking_name}</a>에서 직접 하세요.` +
+      (city.name === "부천시" ? " 부천은 코트별이 아니라 시설 단위로 예약 가능 여부가 나오며, 다음 달 예약은 매달 20일부터 열립니다." : "");
+    facilityFilter.appendChild(note);
     syncRegionToggles();
+  }
+
+  async function loadFacilities() {
+    const res = await fetch("/api/facilities");
+    const data = await res.json();
+    cities = data.cities;
+    loadPrefs();
+    renderCityTabs();
+    renderFacilities();
   }
 
   function setStatus(html, isError = false) {

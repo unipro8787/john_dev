@@ -76,3 +76,58 @@ FACILITY_NOTES: dict[str, str] = {
 }
 
 assert sorted(f for names in REGIONS.values() for f in names) == sorted(FACILITIES), "REGIONS와 FACILITIES가 어긋남"
+
+
+# ── 부천시 공공서비스예약(reserv.bucheon.go.kr) 테니스장 (2026-10-06 기준, 접수중 10곳)
+# lendingList?lending_inst_nm=tennis 목록에서 확인한 lending_info_seq 값. 부천은 코트별이 아니라
+# 시설 단위로 시간대별 예약가능 여부를 보여 주므로 코트 이름 자리에 "시설 대관"을 둔다.
+# 오정레포츠센터 테니스장(188)은 접수종료 상태라 제외했다.
+BUCHEON_FACILITIES: dict[str, dict[str, int]] = {
+    "복사골테니스장": {"시설 대관": 111},
+    "원미테니스장": {"시설 대관": 112},
+    "종합운동장테니스장": {"시설 대관": 115},
+    "부천체육관테니스장(하드)": {"시설 대관": 192},
+    "부천실내테니스장": {"시설 대관": 195},
+    "해그늘체육공원 테니스장": {"시설 대관": 194},
+    "해그늘체육공원 테니스장(인조잔디)": {"시설 대관": 205},
+    "성주산체육공원테니스장": {"시설 대관": 116},
+    "소사배수지테니스장": {"시설 대관": 114},
+    "남부수자원테니스장": {"시설 대관": 193},
+}
+
+BUCHEON_REGIONS: dict[str, list[str]] = {
+    "원미구": [
+        "복사골테니스장",
+        "원미테니스장",
+        "종합운동장테니스장",
+        "부천체육관테니스장(하드)",
+        "부천실내테니스장",
+        "해그늘체육공원 테니스장",
+        "해그늘체육공원 테니스장(인조잔디)",
+    ],
+    "소사구": [
+        "성주산체육공원테니스장",
+        "소사배수지테니스장",
+        "남부수자원테니스장",
+    ],
+}
+
+FACILITY_NOTES["부천실내테니스장"] = "실내"
+
+assert sorted(f for names in BUCHEON_REGIONS.values() for f in names) == sorted(BUCHEON_FACILITIES), "부천 REGIONS 어긋남"
+
+
+# ── 도시별 묶음. source는 어느 예약 시스템 클라이언트로 조회할지를 뜻한다.
+CITIES: list[dict] = [
+    {"name": "화성시", "source": "hscity", "facilities": FACILITIES, "regions": REGIONS,
+     "booking_url": "https://yeyak.hscity.go.kr", "booking_name": "화성시 통합예약시스템"},
+    {"name": "부천시", "source": "bucheon", "facilities": BUCHEON_FACILITIES, "regions": BUCHEON_REGIONS,
+     "booking_url": "https://reserv.bucheon.go.kr", "booking_name": "부천시 공공서비스예약"},
+]
+
+# 시설 이름 → (도시 이름, source). 시설 이름은 도시 사이에서도 겹치지 않아야 한다.
+FACILITY_CITY: dict[str, tuple[str, str]] = {}
+for _city in CITIES:
+    for _name in _city["facilities"]:
+        assert _name not in FACILITY_CITY, f"시설 이름 중복: {_name}"
+        FACILITY_CITY[_name] = (_city["name"], _city["source"])
