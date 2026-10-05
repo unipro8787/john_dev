@@ -1,91 +1,99 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>동탄 테니스코트 찾기</title>
-<meta name="description" content="동탄 지역 공공 테니스코트 예약 가능 시간대를 한눈에 검색">
+{% extends "base.html" %}
+{% block title %}동탄 테니스장 빈 코트 찾기 · 화성시 공공 테니스장 예약 현황{% endblock %}
 
-<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="동탄테니스">
-<meta name="theme-color" content="#0f6b4f">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
-<link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "{{ site_name }}",
+  "url": "{{ site_url }}/",
+  "applicationCategory": "SportsApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ko",
+  "description": "동탄·화성시 공공 테니스장의 예약 가능한 빈 코트와 시간대를 한 번에 검색하는 무료 웹앱",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+}
+</script>
+{% endblock %}
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% block header %}
+<a class="brand-link" href="{{ url_for('index') }}"><h1>🎾 동탄 테니스코트 찾기</h1></a>
+<p class="subtitle">화성시 통합예약시스템 실시간 조회</p>
+{% endblock %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<div class="app">
-  <header class="topbar">
-    <h1>🎾 동탄 테니스코트 찾기</h1>
-    <p class="subtitle">화성시 통합예약시스템 실시간 조회</p>
-  </header>
+{% block content %}
+<section class="panel" id="search-panel">
+  <div class="section-label">기간</div>
+  <div class="quick-range" id="quick-range" role="group" aria-label="빠른 기간 선택">
+    <button type="button" class="chip quick-btn" data-days="1">오늘</button>
+    <button type="button" class="chip quick-btn" data-days="3">3일</button>
+    <button type="button" class="chip quick-btn" data-days="7">7일</button>
+    <button type="button" class="chip quick-btn" data-days="14">14일</button>
+    <button type="button" class="chip quick-btn" data-days="30">30일</button>
+  </div>
 
-  <main>
-    <section class="panel" id="search-panel">
-      <div class="section-label">기간</div>
-      <div class="quick-range" id="quick-range" role="group" aria-label="빠른 기간 선택">
-        <button type="button" class="chip quick-btn" data-days="1">오늘</button>
-        <button type="button" class="chip quick-btn" data-days="3">3일</button>
-        <button type="button" class="chip quick-btn" data-days="7">7일</button>
-        <button type="button" class="chip quick-btn" data-days="14">14일</button>
-        <button type="button" class="chip quick-btn" data-days="30">30일</button>
-      </div>
+  <div class="date-row">
+    <label class="field">
+      <span>시작일</span>
+      <input type="date" id="start-date">
+    </label>
+    <label class="field">
+      <span>종료일</span>
+      <input type="date" id="end-date">
+    </label>
+  </div>
 
-      <div class="date-row">
-        <label class="field">
-          <span>시작일</span>
-          <input type="date" id="start-date">
-        </label>
-        <label class="field">
-          <span>종료일</span>
-          <input type="date" id="end-date">
-        </label>
-      </div>
+  <div class="section-label">시간대</div>
+  <div class="time-range" id="time-range" role="group" aria-label="빠른 시간대 선택">
+    <button type="button" class="chip time-btn" data-start="" data-end="">전체 시간</button>
+    <button type="button" class="chip time-btn" data-start="06:00" data-end="12:00">오전</button>
+    <button type="button" class="chip time-btn" data-start="12:00" data-end="18:00">오후</button>
+    <button type="button" class="chip time-btn" data-start="18:00" data-end="22:00">저녁</button>
+  </div>
 
-      <div class="section-label">시간대</div>
-      <div class="time-range" id="time-range" role="group" aria-label="빠른 시간대 선택">
-        <button type="button" class="chip time-btn" data-start="" data-end="">전체 시간</button>
-        <button type="button" class="chip time-btn" data-start="06:00" data-end="12:00">오전</button>
-        <button type="button" class="chip time-btn" data-start="12:00" data-end="18:00">오후</button>
-        <button type="button" class="chip time-btn" data-start="18:00" data-end="22:00">저녁</button>
-      </div>
+  <div class="date-row">
+    <label class="field">
+      <span>시작 시간</span>
+      <input type="time" id="time-start" step="1800">
+    </label>
+    <label class="field">
+      <span>종료 시간</span>
+      <input type="time" id="time-end" step="1800">
+    </label>
+  </div>
 
-      <div class="date-row">
-        <label class="field">
-          <span>시작 시간</span>
-          <input type="time" id="time-start" step="1800">
-        </label>
-        <label class="field">
-          <span>종료 시간</span>
-          <input type="time" id="time-end" step="1800">
-        </label>
-      </div>
+  <div class="section-label">시설</div>
+  <div class="facility-filter" id="facility-filter" aria-label="시설 필터">
+    <!-- JS로 채움 -->
+  </div>
 
-      <div class="section-label">시설</div>
-      <div class="facility-filter" id="facility-filter" aria-label="시설 필터">
-        <!-- JS로 채움 -->
-      </div>
+  <button type="button" id="search-btn" class="search-btn">검색</button>
+</section>
 
-      <button type="button" id="search-btn" class="search-btn">검색</button>
-    </section>
+<section id="status-area" aria-live="polite"></section>
 
-    <section id="status-area" aria-live="polite"></section>
+<section id="results" class="results"></section>
 
-    <section id="results" class="results"></section>
-  </main>
+<section class="panel info" aria-labelledby="guide-title">
+  <h2 id="guide-title">동탄 테니스장 빈 코트, 한 번에 찾기</h2>
+  <p>화성시 통합예약시스템에서는 코트마다 페이지를 하나씩 열어 예약 현황을 확인해야 합니다. 이 서비스는 동탄 지역 공공 테니스장 {{ court_count }}개 코트의 예약 현황을 한 번에 모아, 원하는 날짜와 시간대에 비어 있는 코트만 보여 줍니다.</p>
+  <ol class="steps">
+    <li><b>기간 고르기</b> · 오늘, 3일, 7일처럼 빠르게 고르거나 시작일과 종료일을 직접 지정합니다.</li>
+    <li><b>시간대 고르기</b> · 퇴근 후 저녁, 주말 오전처럼 치고 싶은 시간대만 남길 수 있습니다.</li>
+    <li><b>시설 고르기</b> · 가까운 테니스장만 골라 보거나 전체를 한 번에 봅니다.</li>
+    <li><b>예약하기</b> · 마음에 드는 코트를 찾았다면 화성시 통합예약시스템에서 예약을 마무리합니다.</li>
+  </ol>
+  <h3>조회하는 테니스장</h3>
+  <ul class="facility-list">
+    {% for name, courts in facilities.items() %}
+    <li><b>{{ name }}</b> · {{ courts | length }}면 ({{ courts.keys() | join(', ') }})</li>
+    {% endfor %}
+  </ul>
+  <p class="muted">예약 현황은 최대 3분 단위로 새로 불러오므로, 아주 최근에 들어온 예약은 반영되지 않았을 수 있습니다. <a href="{{ url_for('about') }}">서비스 소개와 자주 묻는 질문</a>도 확인해 보세요.</p>
+</section>
+{% endblock %}
 
-  <footer>
-    <p>데이터 출처: <a href="https://yeyak.hscity.go.kr" target="_blank" rel="noopener">yeyak.hscity.go.kr</a></p>
-  </footer>
-</div>
-
+{% block scripts %}
 <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+{% endblock %}

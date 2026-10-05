@@ -79,3 +79,21 @@ python app.py
   - `facility`는 반복 지정 가능, 생략 시 전체 시설
   - `time_start`/`time_end`는 생략 가능 (전체 시간). 지정한 시간 구간과 겹치는 슬롯만 반환
   - 조회 기간은 최대 45일 (`app.py`의 `MAX_RANGE_DAYS`)
+
+### 검색 노출·광고 준비 (2026-10-05 추가)
+
+페이지: `/`(검색 + 안내 글), `/about`(서비스 소개·FAQ), `/privacy`(개인정보처리방침).
+검색엔진용: `/robots.txt`(`/api/` 제외), `/sitemap.xml`, 페이지별 canonical·OG 태그, 메인에 JSON-LD(WebApplication).
+운영용: `/healthz`(상태 확인), `/ads.txt`(애드센스 ID를 설정했을 때만).
+
+Render → 서비스 → **Environment** 에서 아래 값을 넣으면 코드 수정 없이 켜진다 (저장하면 자동 재배포):
+
+| 변수 | 넣을 값 | 켜지는 것 |
+|---|---|---|
+| `SITE_URL` | 정식 도메인 (예: `https://dongtantennis.kr`) | canonical·사이트맵 주소, onrender.com → 정식 도메인 301 이동 |
+| `GOOGLE_SITE_VERIFICATION` | 서치 콘솔 "HTML 태그" 방식의 `content` 값 | 구글 소유 확인 메타 태그 |
+| `NAVER_SITE_VERIFICATION` | 네이버 서치어드바이저 "HTML 태그" 방식의 `content` 값 | 네이버 소유 확인 메타 태그 |
+| `ADSENSE_CLIENT` | 애드센스 게시자 ID (`ca-pub-` + 숫자) | 광고 스크립트, `/ads.txt`, 개인정보처리방침의 광고 안내 |
+| `CONTACT_EMAIL` | 문의 받을 메일 | 소개·개인정보처리방침의 문의처 |
+
+개인정보처리방침이나 페이지 내용을 바꾸면 `app.py`의 `POLICY_EFFECTIVE`, `PAGES_UPDATED` 날짜도 함께 바꾼다.

@@ -3,14 +3,25 @@
 #
 # 로컬 실행: python app.py  (http://127.0.0.1:5000)
 # 배포 실행: gunicorn app:app
+#
+# 배포 환경변수 (모두 선택, 없으면 해당 기능만 꺼진다)
+#   SITE_URL                  정식 주소 (예: https://dongtantennis.kr). 설정하면 canonical·사이트맵에 쓰이고,
+#                             다른 호스트(예: *.onrender.com)로 들어온 페이지 요청은 이 주소로 301 이동한다.
+#   GOOGLE_SITE_VERIFICATION  구글 서치 콘솔 HTML 태그의 content 값
+#   NAVER_SITE_VERIFICATION   네이버 서치어드바이저 HTML 태그의 content 값
+#   ADSENSE_CLIENT            애드센스 게시자 ID (예: ca-pub-1234567890123456). 광고 스크립트와 ads.txt가 켜진다.
+#   CONTACT_EMAIL             소개·개인정보처리방침에 표시할 문의 메일
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from datetime import date, datetime, timedelta
 
-from flask import Flask, jsonify, render_template, request
+from urllib.parse import urlparse
+
+from flask import Flask, Response, abort, jsonify, redirect, render_template, request, url_for
 import requests
 
 from courts import FACILITIES
@@ -56,9 +67,107 @@ def _fetch_range_cached(stadium_idx: int, start: date, end: date) -> list:
     return result
 
 
+SITE_NAME = "동탄 테니스코트 찾기"
+POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-05"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+_ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
+
+
+def _env(name: str) -> str | None:
+    value = (os.environ.get(name) or "").strip()
+    return value or None
+
+
+def _site_url() -> str:
+    return (_env("SITE_URL") or request.url_root).rstrip("/")
+
+
+def _adsense_client() -> str | None:
+    value = _env("ADSENSE_CLIENT")
+    return value if value and _ADSENSE_RE.match(value) else None
+
+
+@app.before_request
+def _redirect_to_canonical_host():
+    # 정식 도메인을 연결한 뒤에는 onrender.com 주소로 들어온 페이지를 정식 주소로 보낸다
+    # (검색엔진에 같은 페이지가 두 주소로 잡히지 않게). API와 헬스체크는 그대로 둔다.
+    site = _env("SITE_URL")
+    if not site or request.path.startswith("/api/") or request.path == "/healthz":
+        return None
+    target = urlparse(site)
+    if target.netloc and request.host != target.netloc:
+        qs = ("?" + request.query_string.decode()) if request.query_string else ""
+        return redirect(f"{target.scheme}://{target.netloc}{request.path}{qs}", code=301)
+    return None
+
+
+@app.context_processor
+def _inject_site():
+    return {
+        "site_name": SITE_NAME,
+        "site_url": _site_url(),
+        "google_site_verification": _env("GOOGLE_SITE_VERIFICATION"),
+        "naver_site_verification": _env("NAVER_SITE_VERIFICATION"),
+        "adsense_client": _adsense_client(),
+        "contact_email": _env("CONTACT_EMAIL"),
+        "facilities": FACILITIES,
+        "court_count": sum(len(c) for c in FACILITIES.values()),
+        "policy_effective": POLICY_EFFECTIVE,
+    }
+
+
 @app.get("/")
 def index():
     return render_template("index.html")
+
+
+@app.get("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.get("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    body = "\n".join([
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        f"Sitemap: {_site_url()}/sitemap.xml",
+        "",
+    ])
+    return Response(body, mimetype="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    site = _site_url()
+    pages = [("index", "1.0"), ("about", "0.6"), ("privacy", "0.3")]
+    urls = "".join(
+        f"<url><loc>{site}{url_for(name)}</loc><lastmod>{PAGES_UPDATED}</lastmod><priority>{prio}</priority></url>"
+        for name, prio in pages
+    )
+    body = ('<?xml version="1.0" encoding="UTF-8"?>'
+            f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
+    return Response(body, mimetype="application/xml")
+
+
+@app.get("/ads.txt")
+def ads_txt():
+    client = _adsense_client()
+    if not client:
+        abort(404)
+    # 애드센스 표준 형식: google.com, pub-XXXX, DIRECT, (Google 인증기관 ID)
+    return Response(f"google.com, {client.removeprefix('ca-')}, DIRECT, f08c47fec0942fa0\n", mimetype="text/plain")
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 
 @app.get("/api/facilities")
