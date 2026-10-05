@@ -175,7 +175,10 @@ CITIES: list[dict] = [
      "booking_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp", "booking_name": "경주시 통합예약",
      "day_only": True},
     {"name": "서울 강남구", "source": "gangnam", "facilities": GANGNAM_FACILITIES, "regions": GANGNAM_REGIONS,
-     "booking_url": "https://life.gangnam.go.kr/fmcs/54", "booking_name": "강남구 통합예약"},
+     "booking_url": "https://life.gangnam.go.kr/fmcs/54", "booking_name": "강남구 통합예약",
+     # 강남구 통합예약 이용약관에 "얻은 정보를 가공·판매하는 등 상업적으로 사용할 수 없다"는 조항이 있다.
+     # 광고(ADSENSE_CLIENT)를 켜면 기본으로 빼고, 이용 허락을 받은 뒤 ALLOW_ADS_WITH=gangnam 으로 다시 켠다.
+     "commercial_restricted": True},
 ]
 
 # 시설 이름 → (도시 이름, source). 시설 이름은 도시 사이에서도 겹치지 않아야 한다.

@@ -11,6 +11,8 @@
 #   NAVER_SITE_VERIFICATION   네이버 서치어드바이저 HTML 태그의 content 값
 #   ADSENSE_CLIENT            애드센스 게시자 ID (예: ca-pub-1234567890123456). 광고 스크립트와 ads.txt가 켜진다.
 #   CONTACT_EMAIL             소개·개인정보처리방침에 표시할 문의 메일
+#   ALLOW_ADS_WITH            광고를 켠 상태에서도 보여 줄 "상업적 이용 제한" 지역의 source (쉼표 구분, 예: gangnam).
+#                             해당 기관에서 이용 허락을 받은 뒤에만 설정한다. 광고가 꺼져 있으면 의미 없음.
 
 from __future__ import annotations
 
@@ -114,6 +116,21 @@ def _adsense_client() -> str | None:
     return value if value and _ADSENSE_RE.match(value) else None
 
 
+SHORT_NAMES = {"화성시": "화성", "부천시": "부천", "경주시": "경주", "서울 강남구": "강남"}
+
+
+def _active_cities() -> list[dict]:
+    """광고가 켜져 있으면 이용약관상 상업적 이용이 제한된 지역(강남구)을 뺀다. 허락받은 곳은 ALLOW_ADS_WITH로 예외."""
+    if not _adsense_client():
+        return CITIES
+    allowed = {x.strip() for x in (_env("ALLOW_ADS_WITH") or "").split(",") if x.strip()}
+    return [c for c in CITIES if not c.get("commercial_restricted") or c["source"] in allowed]
+
+
+def _active_facility_names() -> set[str]:
+    return {name for c in _active_cities() for name in c["facilities"]}
+
+
 @app.before_request
 def _redirect_to_canonical_host():
     # 정식 도메인을 연결한 뒤에는 onrender.com 주소로 들어온 페이지를 정식 주소로 보낸다
@@ -130,6 +147,7 @@ def _redirect_to_canonical_host():
 
 @app.context_processor
 def _inject_site():
+    cities = _active_cities()
     return {
         "site_name": SITE_NAME,
         "site_url": _site_url(),
@@ -137,10 +155,16 @@ def _inject_site():
         "naver_site_verification": _env("NAVER_SITE_VERIFICATION"),
         "adsense_client": _adsense_client(),
         "contact_email": _env("CONTACT_EMAIL"),
-        "cities": CITIES,
+        "cities": cities,
         "facility_notes": FACILITY_NOTES,
-        "facility_count": len(ALL_FACILITIES),
-        "court_count": sum(len(c) for c in ALL_FACILITIES.values()),
+        "facility_count": sum(len(c["facilities"]) for c in cities),
+        "court_count": sum(len(v) for c in cities for v in c["facilities"].values()),
+        # 페이지 문구에 쓰는 지역 이름 묶음 (광고 설정에 따라 빠지는 지역이 있어 동적으로 만든다)
+        "area_short": "·".join(SHORT_NAMES[c["name"]] for c in cities),
+        "area_title": "·".join(["화성", "동탄"] + [SHORT_NAMES[c["name"]] for c in cities if c["name"] != "화성시"]),
+        "area_long": ", ".join(c["name"] for c in cities),
+        "booking_names": ", ".join(c["booking_name"] for c in cities),
+        "has_city": {c["name"] for c in cities},
         "policy_effective": POLICY_EFFECTIVE,
         "city_slugs": CITY_SLUGS,
     }
@@ -163,13 +187,13 @@ def privacy():
 
 @app.get("/courts")
 def courts_index():
-    return render_template("courts.html", facility_list=facility_entries())
+    return render_template("courts.html", facility_list=facility_entries(_active_cities()))
 
 
 @app.get("/courts/<slug>")
 def court_page(slug: str):
     f = FACILITY_BY_SLUG.get(slug)
-    if not f:
+    if not f or f["name"] not in _active_facility_names():
         abort(404)
     site = _site_url()
     jsonld = {
@@ -187,18 +211,23 @@ def court_page(slug: str):
         jsonld["geo"] = {"@type": "GeoCoordinates", "latitude": info["lat"], "longitude": info["lng"]}
     if info.get("phone"):
         jsonld["telephone"] = info["phone"]
-    nearby = [x for x in facility_entries() if x["city"] == f["city"] and x["slug"] != slug][:6]
+    nearby = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"] and x["slug"] != slug][:6]
     return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, collected=INFO_COLLECTED)
+
+
+def _active_guides() -> dict:
+    names = {c["name"] for c in _active_cities()}
+    return {slug: g for slug, g in GUIDES.items() if g["city"] in names}
 
 
 @app.get("/guide")
 def guide_index():
-    return render_template("guides.html", guides=GUIDES, checked=GUIDE_CHECKED)
+    return render_template("guides.html", guides=_active_guides(), checked=GUIDE_CHECKED)
 
 
 @app.get("/guide/<slug>")
 def guide_page(slug: str):
-    g = GUIDES.get(slug)
+    g = _active_guides().get(slug)
     if not g:
         abort(404)
     city = next(c for c in CITIES if c["name"] == g["city"])
@@ -215,7 +244,7 @@ def guide_page(slug: str):
     }
     return render_template(
         "guide.html", g=g, jsonld=jsonld, checked=GUIDE_CHECKED,
-        city_facilities=[x for x in facility_entries() if x["city"] == g["city"]],
+        city_facilities=[x for x in facility_entries(_active_cities()) if x["city"] == g["city"]],
         booking_url=city["booking_url"], booking_name=city["booking_name"],
     )
 
@@ -256,8 +285,8 @@ def sitemap_xml():
         (url_for("index"), "1.0"),
         (url_for("courts_index"), "0.8"),
         (url_for("guide_index"), "0.8"),
-        *[(url_for("guide_page", slug=s), "0.7") for s in GUIDES],
-        *[(url_for("court_page", slug=f["slug"]), "0.7") for f in facility_entries()],
+        *[(url_for("guide_page", slug=s), "0.7") for s in _active_guides()],
+        *[(url_for("court_page", slug=f["slug"]), "0.7") for f in facility_entries(_active_cities())],
         (url_for("about"), "0.5"),
         (url_for("contact"), "0.3"),
         (url_for("terms"), "0.2"),
@@ -307,7 +336,7 @@ def api_facilities():
                     for region, names in city["regions"].items()
                 ],
             }
-            for city in CITIES
+            for city in _active_cities()
         ]
     })
 
@@ -345,9 +374,11 @@ def api_search():
     if time_start and time_end and time_end <= time_start:
         return jsonify({"error": "종료 시간은 시작 시간보다 이후여야 합니다"}), 400
 
-    # 시설을 고르지 않으면 첫 번째 도시(화성시) 전체를 본다
+    # 시설을 고르지 않으면 첫 번째 도시(화성시) 전체를 본다. 광고 설정으로 빠진 지역의 시설은 무시한다.
     if not selected:
         selected = list(CITIES[0]["facilities"])
+    active_names = _active_facility_names()
+    selected = [name for name in selected if name in active_names]
     targets = [
         (FACILITY_CITY[name][0], FACILITY_CITY[name][1], name, court_label, court_id)
         for name in dict.fromkeys(selected)

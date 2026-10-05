@@ -160,6 +160,7 @@ Render → 서비스 → **Environment** 에서 아래 값을 넣으면 코드 �
 | `NAVER_SITE_VERIFICATION` | 네이버 서치어드바이저 "HTML 태그" 방식의 `content` 값 | 네이버 소유 확인 메타 태그 |
 | `ADSENSE_CLIENT` | 애드센스 게시자 ID (`ca-pub-` + 숫자) | 광고 스크립트, `/ads.txt`, 개인정보처리방침의 광고 안내 |
 | `CONTACT_EMAIL` | 문의 받을 메일 | 소개·개인정보처리방침의 문의처 |
+| `ALLOW_ADS_WITH` | 허락받은 제한 지역 source (예: `gangnam`) | 광고를 켠 상태에서도 해당 지역 표시 |
 
 개인정보처리방침이나 페이지 내용을 바꾸면 `app.py`의 `POLICY_EFFECTIVE`, `PAGES_UPDATED` 날짜도 함께 바꾼다.
 
@@ -172,3 +173,12 @@ Render → 서비스 → **Environment** 에서 아래 값을 넣으면 코드 �
 - 시설 정보는 `python tools/collect_facility_info.py`가 각 기관 공개 상세 페이지에서 모아 `data/facility_info.json`에 저장한다.
   요금·운영시간이 바뀌면 다시 돌리고 결과를 확인한 뒤 커밋한다. 시설 페이지 주소(`content.FACILITY_SLUGS`)는 바꾸지 않는다.
 - 가이드 문구는 공식 안내를 바탕으로 직접 정리한 글이다. 규정이 바뀌면 `GUIDES`와 `GUIDE_CHECKED`를 함께 고친다.
+
+### 광고와 강남구 (2026-10-05 추가)
+
+강남구 통합예약 이용약관에 "얻은 정보를 가공·판매하는 등 상업적으로 사용할 수 없다"는 조항이 있어,
+`courts.CITIES`의 강남구 항목에 `commercial_restricted: True`를 두었다. `ADSENSE_CLIENT`가 설정되면(광고 켜짐)
+강남구는 지역 탭·검색 API·테니스장/가이드 페이지(404)·사이트맵에서 모두 빠지고, 페이지 문구의 지역 이름도
+`area_short`/`area_long` 등으로 자동으로 바뀐다. 강남구에서 이용 허락을 받으면 `ALLOW_ADS_WITH=gangnam`으로 다시 켠다.
+운영기관 문의 초안은 `docs/permission_requests.md`(공개 저장소 제외)에 있다.
+모든 페이지 아래에 "개인이 만든 비공식 안내 서비스, 각 기관과 관계없음" 고지를 넣었다.

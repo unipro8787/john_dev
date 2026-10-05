@@ -49,10 +49,10 @@ _INFO = json.loads(_INFO_PATH.read_text(encoding="utf-8")) if _INFO_PATH.exists(
 INFO_COLLECTED = _INFO.get("collected")
 
 
-def facility_entries() -> list[dict]:
-    """도시·권역 순서대로 시설 한 곳마다 페이지에 필요한 정보를 묶어 돌려준다."""
+def facility_entries(cities: list[dict] | None = None) -> list[dict]:
+    """도시·권역 순서대로 시설 한 곳마다 페이지에 필요한 정보를 묶어 돌려준다 (cities를 주면 그 도시만)."""
     out = []
-    for city in CITIES:
+    for city in (CITIES if cities is None else cities):
         for region, names in city["regions"].items():
             for name in names:
                 out.append({
