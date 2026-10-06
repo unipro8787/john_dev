@@ -23,23 +23,27 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="테니스코트">
-<meta name="theme-color" content="#0f6b4f">
+<meta name="theme-color" content="#22543d">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
 <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 {% if adsense_client %}<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client }}" crossorigin="anonymous"></script>{% endif %}
 {% block head %}{% endblock %}
 </head>
 <body>
-<div class="app">
-  <header class="topbar">
+<header class="masthead">
+  <div class="wrap">
     {% block header %}
-    <a class="brand-link" href="{{ url_for('index') }}"><h1>🎾 테니스코트 빈자리 찾기</h1></a>
+    <a class="brand-link" href="{{ url_for('index') }}">
+      <svg class="ball" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14.5" fill="#d6e04a"/><path d="M4.6 7.6c4.6 2.7 6.9 5.5 6.9 8.4s-2.3 5.7-6.9 8.4M27.4 7.6c-4.6 2.7-6.9 5.5-6.9 8.4s2.3 5.7 6.9 8.4" fill="none" stroke="#f6f2e4" stroke-width="2" stroke-linecap="round"/></svg>
+      <h1>테니스코트 빈자리 찾기</h1>
+    </a>
+    <p class="subtitle">{{ area_short }} 공공 테니스장 빈 시간을 한 화면에서</p>
     {% endblock %}
     <nav class="site-nav" aria-label="주 메뉴">
       {% set ep = request.endpoint %}
@@ -48,8 +52,10 @@
       <a href="{{ url_for('guide_index') }}"{% if ep in ('guide_index', 'guide_page') %} aria-current="page"{% endif %}>예약 가이드</a>
       <a href="{{ url_for('about') }}"{% if ep == 'about' %} aria-current="page"{% endif %}>소개</a>
     </nav>
-  </header>
+  </div>
+</header>
 
+<div class="app">
   <main>
     {% block content %}{% endblock %}
   </main>
@@ -64,6 +70,7 @@
       <a href="{{ url_for('terms') }}">이용약관</a>
       <a href="{{ url_for('privacy') }}">개인정보처리방침</a>
     </nav>
+    <p class="maker-note">동탄에서 테니스 치는 사람이 퇴근 후 칠 코트를 찾다가 만들었습니다. 잘못된 곳이 보이면 <a href="{{ url_for('contact') }}">알려 주세요</a>.</p>
     <p>데이터 출처: {% for c in cities %}<a href="{{ c.booking_url }}" target="_blank" rel="noopener">{{ c.booking_name }}</a>{% if not loop.last %}, {% endif %}{% endfor %} · 예약은 해당 사이트에서 직접 하셔야 합니다.</p>
     <p class="disclaimer">이 사이트는 개인이 만든 <b>비공식 안내 서비스</b>로, 각 시·구청이나 시설 운영기관과 관계가 없습니다. 각 기관이 공개한 예약 현황을 모아 보여 줄 뿐이며, 정확한 정보와 예약은 각 기관의 공식 예약 사이트에서 확인해 주세요.</p>
   </footer>

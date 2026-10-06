@@ -33,7 +33,7 @@ import gangnam_client
 import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
-from content import CITY_SLUGS, FACILITY_BY_SLUG, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
+from content import CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
 FETCHERS = {
@@ -329,7 +329,12 @@ def api_facilities():
                     {
                         "name": region,
                         "facilities": [
-                            {"name": f, "courts": list(city["facilities"][f]), "note": FACILITY_NOTES.get(f)}
+                            {
+                                "name": f,
+                                "courts": list(city["facilities"][f]),
+                                "note": FACILITY_NOTES.get(f),
+                                "url": url_for("court_page", slug=FACILITY_SLUGS[f]),
+                            }
                             for f in names
                         ],
                     }

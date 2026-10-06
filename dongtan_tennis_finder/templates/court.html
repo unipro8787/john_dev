@@ -72,24 +72,34 @@
         box.appendChild(el("p", "muted", "앞으로 2주 동안 예약 가능한 시간이 없습니다. 예약이 열리기 전이거나 모두 찼을 수 있어요."));
         return;
       }
+      // 날짜 → 코트 → 빈 시간 (코트가 하나뿐이거나 시설 단위면 코트 이름은 생략)
       const multiCourt = new Set(data.results.map((r) => r.court)).size > 1;
       const byDate = new Map();
       data.results.forEach((r) => {
-        if (!byDate.has(r.date)) byDate.set(r.date, []);
-        byDate.get(r.date).push(r);
+        if (!byDate.has(r.date)) byDate.set(r.date, new Map());
+        const byCourt = byDate.get(r.date);
+        if (!byCourt.has(r.court)) byCourt.set(r.court, []);
+        byCourt.get(r.court).push(r);
       });
-      for (const [date, items] of byDate) {
-        const row = el("div", "avail-row");
+      for (const [date, byCourt] of byDate) {
         const d = new Date(date + "T00:00:00");
-        row.appendChild(el("div", "avail-date", `${d.getMonth() + 1}/${d.getDate()} (${DOW[d.getDay()]})`));
-        const slots = el("div", "time-slots");
-        items.sort((a, b) => a.begin.localeCompare(b.begin) || a.court.localeCompare(b.court));
-        items.forEach((s) => {
-          const court = multiCourt ? ` · ${s.court}` : "";
-          const label = s.day_only ? `빈 시간 있음${court}` : `${s.phone_only ? "☎ " : ""}${s.begin}~${s.end}${court}`;
-          slots.appendChild(el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""), label));
-        });
-        row.appendChild(slots);
+        const row = el("div", "avail-row" + (d.getDay() === 6 ? " sat" : d.getDay() === 0 ? " sun" : ""));
+        row.appendChild(el("div", "avail-date", `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`));
+        const courts = el("div", "avail-courts");
+        const names = [...byCourt.keys()].sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
+        for (const court of names) {
+          const label = court.replace(/ 코트/, "");
+          const line = el("div", "court-row" + (!multiCourt ? " solo" : label.length > 4 ? " long" : ""));
+          if (multiCourt) line.appendChild(el("div", "court-name", label));
+          const slots = el("div", "time-slots");
+          byCourt.get(court).sort((a, b) => a.begin.localeCompare(b.begin)).forEach((s) => {
+            const label = s.day_only ? "빈 시간 있음" : `${s.phone_only ? "☎ " : ""}${s.begin}~${s.end}`;
+            slots.appendChild(el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""), label));
+          });
+          line.appendChild(slots);
+          courts.appendChild(line);
+        }
+        row.appendChild(courts);
         box.appendChild(row);
       }
     })

@@ -16,8 +16,10 @@
   let selectedFacilities = new Set();
   let allFacilities = [];
 
+  // toISOString()은 UTC라 한국 시간 자정~오전 9시에는 하루 전 날짜가 된다
   function toISODate(d) {
-    return d.toISOString().slice(0, 10);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
   function setQuickRange(days) {
@@ -211,6 +213,7 @@
     const res = await fetch("/api/facilities");
     const data = await res.json();
     cities = data.cities;
+    facilityUrls = new Map(cities.flatMap((c) => c.regions.flatMap((r) => r.facilities.map((f) => [f.name, f.url]))));
     loadPrefs();
     renderCityTabs();
     renderFacilities();
@@ -222,69 +225,109 @@
       : "";
   }
 
-  function dowLabel(dateStr) {
+  let facilityUrls = new Map(); // 시설명 → 테니스장 안내 페이지
+
+  function dayInfo(dateStr) {
     const d = new Date(dateStr + "T00:00:00");
-    return DOW[d.getDay()];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((d - today) / 86400000);
+    return {
+      month: d.getMonth() + 1,
+      day: d.getDate(),
+      dow: d.getDay(),
+      tag: diff === 0 ? "오늘" : diff === 1 ? "내일" : "",
+    };
+  }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function slotChip(s) {
+    const chip = el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""));
+    // 경주처럼 날짜 단위로만 공개하는 곳은 시간 대신 "빈 시간 있음"으로 보여 준다
+    chip.textContent = s.day_only ? "그날 빈 시간 있음" : `${s.begin}~${s.end}`;
+    if (s.day_only) chip.title = "몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인하세요";
+    if (s.phone_only) {
+      // 강남구: 온라인 신청기간이 끝난 달의 남은 칸은 시설에 전화로 예약한다
+      chip.textContent = `☎ ${s.begin}~${s.end}`;
+      chip.title = "온라인 신청기간이 끝나 시설에 전화로 예약해야 하는 빈 시간";
+    }
+    return chip;
   }
 
   function renderResults(items) {
     resultsEl.innerHTML = "";
     if (items.length === 0) {
-      setStatus("조회 기간 내 예약 가능한 시간대가 없습니다.");
+      setStatus("고른 기간·시간에 비어 있는 코트가 없어요. 기간을 넓히거나 다른 시간대로 찾아보세요.");
       return;
     }
     setStatus("");
 
+    // 날짜 → 시설 → 코트 → 빈 시간
     const byDate = new Map();
     for (const item of items) {
       if (!byDate.has(item.date)) byDate.set(item.date, new Map());
-      const byCourt = byDate.get(item.date);
-      const key = `${item.facility} · ${item.court}`;
-      if (!byCourt.has(key)) byCourt.set(key, []);
-      byCourt.get(key).push(item);
+      const byFacility = byDate.get(item.date);
+      if (!byFacility.has(item.facility)) byFacility.set(item.facility, new Map());
+      const byCourt = byFacility.get(item.facility);
+      if (!byCourt.has(item.court)) byCourt.set(item.court, []);
+      byCourt.get(item.court).push(item);
     }
 
-    for (const [dateStr, byCourt] of byDate) {
-      const group = document.createElement("div");
-      group.className = "day-group";
+    const summary = el("div", "result-summary");
+    const first = dayInfo(startInput.value);
+    const last = dayInfo(endInput.value || startInput.value);
+    const range = startInput.value === (endInput.value || startInput.value)
+      ? `${first.month}월 ${first.day}일`
+      : `${first.month}월 ${first.day}일 ~ ${last.month === first.month ? "" : last.month + "월 "}${last.day}일`;
+    const strong = el("b", null, `${byDate.size}일에 빈 시간 ${items.length}칸`);
+    summary.append(strong, el("span", null, `${currentCity} · ${range}`));
+    resultsEl.appendChild(summary);
 
-      const header = document.createElement("div");
-      header.className = "day-header";
-      header.innerHTML = `${dateStr} <span class="dow">(${dowLabel(dateStr)})</span>`;
+    for (const [dateStr, byFacility] of byDate) {
+      const info = dayInfo(dateStr);
+      const group = el("div", "day-group" + (info.dow === 6 ? " sat" : info.dow === 0 ? " sun" : ""));
+
+      const header = el("div", "day-header");
+      const num = el("span", "day-num");
+      num.append(el("small", null, `${info.month}.`), String(info.day));
+      header.append(num, el("span", "dow", `${DOW[info.dow]}요일`));
+      if (info.tag) header.appendChild(el("span", "day-tag", info.tag));
       group.appendChild(header);
 
-      for (const [courtKey, slots] of byCourt) {
-        const row = document.createElement("div");
-        row.className = "court-row";
+      const body = el("div", "day-body");
+      for (const [facility, byCourt] of byFacility) {
+        const block = el("div", "fac-block");
+        const name = el("div", "fac-name");
+        const url = facilityUrls.get(facility);
+        if (url) {
+          const a = el("a", null, facility);
+          a.href = url;
+          name.appendChild(a);
+        } else {
+          name.textContent = facility;
+        }
+        block.appendChild(name);
 
-        const name = document.createElement("div");
-        name.className = "court-name";
-        const [facility, court] = courtKey.split(" · ");
-        name.innerHTML = `${facility}<br><b>${court}</b>`;
-        row.appendChild(name);
-
-        const slotsEl = document.createElement("div");
-        slotsEl.className = "time-slots";
-        slots
-          .sort((a, b) => a.begin.localeCompare(b.begin))
-          .forEach((s) => {
-            const chip = document.createElement("span");
-            chip.className = "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : "");
-            // 경주처럼 날짜 단위로만 공개하는 곳은 시간 대신 "빈 시간 있음"으로 보여 준다
-            chip.textContent = s.day_only ? "그날 빈 시간 있음" : `${s.begin}~${s.end}`;
-            if (s.day_only) chip.title = "몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인하세요";
-            if (s.phone_only) {
-              // 강남구: 온라인 신청기간이 끝난 달의 남은 칸은 시설에 전화로 예약한다
-              chip.textContent = `☎ ${s.begin}~${s.end}`;
-              chip.title = "온라인 신청기간이 끝나 시설에 전화로 예약해야 하는 빈 시간";
-            }
-            slotsEl.appendChild(chip);
-          });
-        row.appendChild(slotsEl);
-
-        group.appendChild(row);
+        // 부천처럼 시설 단위로만 나오는 곳은 코트 이름 칸을 비운다
+        const solo = byCourt.size === 1 && byCourt.has("시설 대관");
+        for (const [court, slots] of byCourt) {
+          const label = court.replace(/ 코트/, "");
+          const row = el("div", "court-row" + (solo ? " solo" : label.length > 4 ? " long" : ""));
+          if (!solo) row.appendChild(el("div", "court-name", label));
+          const slotsEl = el("div", "time-slots");
+          slots.sort((a, b) => a.begin.localeCompare(b.begin)).forEach((s) => slotsEl.appendChild(slotChip(s)));
+          row.appendChild(slotsEl);
+          block.appendChild(row);
+        }
+        body.appendChild(block);
       }
-
+      group.appendChild(body);
       resultsEl.appendChild(group);
     }
   }
@@ -303,8 +346,8 @@
     }
 
     searchBtn.disabled = true;
-    searchBtn.textContent = "검색 중...";
-    setStatus("검색 중입니다...");
+    searchBtn.textContent = "찾는 중…";
+    setStatus("각 예약 사이트에서 빈 시간을 모으는 중이에요…");
     resultsEl.innerHTML = "";
 
     try {
@@ -326,7 +369,7 @@
       setStatus("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", true);
     } finally {
       searchBtn.disabled = false;
-      searchBtn.textContent = "검색";
+      searchBtn.textContent = "빈 코트 찾기";
     }
   }
 
