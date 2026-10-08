@@ -19,11 +19,11 @@
   {% endfor %}
   {% endfor %}
 
-  <h3>{{ g.city }} 테니스장 바로가기</h3>
+  <h3>{{ city_keywords[g.city] }} 테니스장 바로가기</h3>
   <ul class="court-links">
     {% for f in city_facilities %}<li><a href="{{ url_for('court_page', slug=f.slug) }}">{{ f.name }}</a></li>{% endfor %}
   </ul>
-  <p><a class="cta" href="{{ url_for('index') }}">{{ g.city }} 빈 코트 검색하기</a></p>
+  <p><a class="cta" href="{{ url_for('index') }}">{{ city_keywords[g.city] }} 테니스장 빈 코트 검색하기</a></p>
 
   <p class="muted source">{{ g.city }} 예약 사이트의 공식 안내를 바탕으로 이 사이트가 정리한 내용입니다 ({{ checked }} 확인). 규정은 바뀔 수 있으니 예약 전에 <a href="{{ booking_url }}" target="_blank" rel="noopener">{{ booking_name }}</a> 안내를 함께 확인하세요.</p>
 </article>

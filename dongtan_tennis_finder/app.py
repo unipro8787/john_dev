@@ -33,7 +33,7 @@ import gangnam_client
 import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
-from content import CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
+from content import CITY_KEYWORDS, CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
 FETCHERS = {
@@ -98,7 +98,7 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 SITE_NAME = "테니스코트 빈자리 찾기"
 POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-05"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-08"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -167,6 +167,10 @@ def _inject_site():
         "has_city": {c["name"] for c in cities},
         "policy_effective": POLICY_EFFECTIVE,
         "city_slugs": CITY_SLUGS,
+        "facility_slugs": FACILITY_SLUGS,
+        "city_keywords": CITY_KEYWORDS,
+        # 제목에 쓰는 검색용 지역 이름: 동탄·화성·부천·경주·서울 강남구
+        "area_kw": "·".join(CITY_KEYWORDS[c["name"]] for c in cities),
     }
 
 

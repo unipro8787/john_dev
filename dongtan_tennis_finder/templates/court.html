@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ f.name }} 예약·빈 코트 · {{ f.city }} 공공 테니스장{% endblock %}
-{% block description %}{{ f.city }} {{ f.name }}{% if f.info.address %}({{ f.info.address }}){% endif %}의 운영시간, 요금, 문의처, 예약 방법과 앞으로 2주 동안 예약 가능한 시간을 확인하세요.{% endblock %}
+{% block title %}{{ f.name }} 예약·빈 코트 · {{ f.area_kw }} 테니스장{% endblock %}
+{% block description %}{{ f.area_kw }} 공공 테니스장 {{ f.name }}{% if f.alias %}({{ f.alias }}){% endif %}의 예약 방법, 운영시간, 요금, 문의처{% if f.info.address %}, 주소({{ f.info.address }}){% endif %}와 앞으로 2주 동안 비어 있는 테니스 코트 시간을 확인하세요.{% endblock %}
 
 {% block head %}
 <script type="application/ld+json">{{ jsonld | tojson }}</script>
@@ -10,7 +10,7 @@
 <article class="panel info">
   <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › <a href="{{ url_for('courts_index') }}">테니스장 목록</a> › {{ f.city }} › {{ f.name }}</nav>
   <h2>{{ f.name }}</h2>
-  <p class="muted">{{ f.city }} {{ f.region }} · {% if f.per_facility %}시설 단위 예약{% else %}{{ f.courts | join(', ') }}{% endif %}</p>
+  <p class="muted">{% if f.alias %}다른 이름 {{ f.alias }} · {% endif %}{{ f.city }} {{ f.region }} · {% if f.per_facility %}시설 단위 예약{% else %}{{ f.courts | join(', ') }}{% endif %}</p>
 
   <dl class="facts">
     {% if f.info.address %}<dt>주소</dt><dd>{{ f.info.address }}{% if f.info.lat %} · <a href="https://map.kakao.com/link/map/{{ f.name | urlencode }},{{ f.info.lat }},{{ f.info.lng }}" target="_blank" rel="noopener">카카오맵에서 보기</a>{% endif %}</dd>{% endif %}
@@ -24,7 +24,7 @@
     {% if f.info.confirm_type %}<dt>승인 방식</dt><dd>{{ f.info.confirm_type }}</dd>{% endif %}
     {% if f.info.operator %}<dt>운영</dt><dd>{{ f.info.operator }}</dd>{% endif %}
     {% if f.info.phone %}<dt>문의</dt><dd>{{ f.info.phone }}</dd>{% endif %}
-    <dt>예약</dt><dd><a href="{{ f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }}</a> · <a href="{{ url_for('guide_page', slug=f.city_slug) }}">{{ f.city }} 예약 방법 보기</a></dd>
+    <dt>예약</dt><dd><a href="{{ f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }}</a> · <a href="{{ url_for('guide_page', slug=f.city_slug) }}">{{ city_keywords[f.city] }} 테니스장 예약 방법</a></dd>
   </dl>
 
   <h3>앞으로 2주 빈 시간</h3>
@@ -37,7 +37,7 @@
   <p><a class="cta" href="{{ url_for('index') }}">다른 날짜·시간으로 검색하기</a></p>
 
   {% if nearby %}
-  <h3>같은 지역의 다른 테니스장</h3>
+  <h3>{{ city_keywords[f.city] }}의 다른 테니스장</h3>
   <ul class="court-links">
     {% for n in nearby %}<li><a href="{{ url_for('court_page', slug=n.slug) }}">{{ n.name }}</a></li>{% endfor %}
   </ul>
