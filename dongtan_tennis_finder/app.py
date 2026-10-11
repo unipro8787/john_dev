@@ -33,6 +33,7 @@ import gangnam_client
 import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
+from facility_details import DETAILS_CHECKED
 from content import CITY_KEYWORDS, CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
@@ -216,7 +217,8 @@ def court_page(slug: str):
     if info.get("phone"):
         jsonld["telephone"] = info["phone"]
     nearby = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"] and x["slug"] != slug][:6]
-    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, collected=INFO_COLLECTED)
+    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, collected=INFO_COLLECTED,
+                           details_checked=DETAILS_CHECKED)
 
 
 def _active_guides() -> dict:

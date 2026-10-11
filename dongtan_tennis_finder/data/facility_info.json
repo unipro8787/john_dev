@@ -186,7 +186,7 @@
     "건천테니스장": {
       "address": "경북 경주시 건천읍 천포방내길 34",
       "fee": "테니스 : 1시간 1500원",
-      "phone": "054-751-9681",
+      "phone": "054-779-8084",
       "source_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/facility_view.jsp?mem_id=B0000033&item_id=T0000280"
     },
     "외동생활체육공원 테니스장": {
@@ -205,6 +205,7 @@
       "source_url": "https://life.gangnam.go.kr/fmcs/107"
     },
     "포이테니스장": {
+      "address": "서울 강남구 개포동 1274",
       "hours": "06:00~22:00",
       "phone": "02-2176-0876",
       "confirm_type": "심의승인",

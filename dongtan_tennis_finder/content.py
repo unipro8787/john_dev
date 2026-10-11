@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from courts import CITIES, FACILITY_NOTES
+from facility_details import FACILITY_DETAILS
 
 GUIDE_CHECKED = "2026-10-05"
 
@@ -102,12 +103,14 @@ def facility_entries(cities: list[dict] | None = None) -> list[dict]:
                     "info": _INFO["facilities"].get(name, {}),
                     "area_kw": REGION_KEYWORDS.get((city["name"], region), CITY_KEYWORDS[city["name"]]),
                     "alias": FACILITY_ALIASES.get(name),
+                    "details": FACILITY_DETAILS.get(name, {}),
                 })
     return out
 
 
 FACILITY_BY_SLUG = {f["slug"]: f for f in facility_entries()}
 assert len(FACILITY_BY_SLUG) == len(FACILITY_SLUGS), "시설 주소(slug) 누락"
+assert set(FACILITY_DETAILS) <= set(FACILITY_SLUGS), "FACILITY_DETAILS에 모르는 시설 이름"
 
 
 # ── 지역별 예약 가이드. sections: [(소제목, [문단 또는 ("list", [항목...])])]
