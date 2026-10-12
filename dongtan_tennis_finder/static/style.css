@@ -826,6 +826,26 @@ article.info {
   }
 }
 
+.faq {
+  margin: 12px 0 18px;
+  font-size: 14.5px;
+}
+
+.faq dt {
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.faq dt::before {
+  content: "Q. ";
+  color: var(--muted);
+}
+
+.faq dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .court-links {
   list-style: none;
   padding: 0 !important;

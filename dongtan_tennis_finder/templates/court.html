@@ -4,6 +4,7 @@
 
 {% block head %}
 <script type="application/ld+json">{{ jsonld | tojson }}</script>
+{% if faq_jsonld %}<script type="application/ld+json">{{ faq_jsonld | tojson }}</script>{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -46,6 +47,14 @@
     {% for t in f.details.tips %}<li>{{ t }}</li>
     {% endfor %}
   </ul>
+  {% endif %}
+
+  {% if f.details.faq %}
+  <h3>자주 묻는 질문</h3>
+  <dl class="faq">
+    {% for q, a in f.details.faq %}<dt>{{ q }}</dt><dd>{{ a }}</dd>
+    {% endfor %}
+  </dl>
   {% endif %}
 
   {% if nearby %}

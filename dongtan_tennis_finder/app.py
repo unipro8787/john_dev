@@ -216,9 +216,15 @@ def court_page(slug: str):
         jsonld["geo"] = {"@type": "GeoCoordinates", "latitude": info["lat"], "longitude": info["lng"]}
     if info.get("phone"):
         jsonld["telephone"] = info["phone"]
+    faq = f["details"].get("faq") or []
+    faq_jsonld = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq],
+    } if faq else None
     nearby = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"] and x["slug"] != slug][:6]
-    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, collected=INFO_COLLECTED,
-                           details_checked=DETAILS_CHECKED)
+    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, faq_jsonld=faq_jsonld,
+                           collected=INFO_COLLECTED, details_checked=DETAILS_CHECKED)
 
 
 def _active_guides() -> dict:
