@@ -99,7 +99,7 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 SITE_NAME = "테니스코트 빈자리 찾기"
 POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-08"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-12"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
