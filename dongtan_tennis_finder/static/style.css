@@ -1054,3 +1054,13 @@ footer p {
 .info-table tbody th {
   font-weight: 600;
 }
+
+/* 같은 지역 테니스장 비교 표: 지금 보고 있는 시설 행 강조 */
+.compare-table {
+  min-width: 620px;
+}
+
+.compare-table tr.current th,
+.compare-table tr.current td {
+  background: color-mix(in srgb, var(--rule) 45%, transparent);
+}

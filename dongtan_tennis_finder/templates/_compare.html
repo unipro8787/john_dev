@@ -1,0 +1,13 @@
+{# 같은 지역 테니스장 비교 표. rows: compare.compare_rows(), current: 지금 페이지 시설 이름(없으면 강조 없음) #}
+<div class="table-scroll"><table class="info-table compare-table">
+  <thead><tr><th scope="col">테니스장</th><th scope="col">코트</th><th scope="col">운영시간</th><th scope="col">평일 낮 요금</th><th scope="col">알아 둘 점</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr{% if r.name == current %} class="current"{% endif %}>
+      <th scope="row">{% if r.name == current %}{{ r.name }} <span class="muted">(이 페이지)</span>{% else %}<a href="{{ url_for('court_page', slug=r.slug) }}">{{ r.name }}</a>{% endif %}</th>
+      <td>{{ r.court }}</td><td>{{ r.hours }}</td><td>{{ r.fee }}</td><td>{{ r.note or '—' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<p class="muted">공식 시설 안내를 바탕으로 정리한 값입니다. 요금이 "—"인 곳은 공식 안내에 요금이 따로 적혀 있지 않아 예약 사이트에서 확인해야 합니다.</p>

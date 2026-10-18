@@ -57,11 +57,10 @@
   </dl>
   {% endif %}
 
-  {% if nearby %}
-  <h3>{{ city_keywords[f.city] }}의 다른 테니스장</h3>
-  <ul class="court-links">
-    {% for n in nearby %}<li><a href="{{ url_for('court_page', slug=n.slug) }}">{{ n.name }}</a></li>{% endfor %}
-  </ul>
+  {% if compare | length > 1 %}
+  <h3>{{ city_keywords[f.city] }} 테니스장 비교</h3>
+  {% if highlights %}<ul class="tips">{% for h in highlights %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+  {% with rows=compare, current=f.name %}{% include "_compare.html" %}{% endwith %}
   {% endif %}
 
   <p class="muted source">정보 출처: <a href="{{ f.info.source_url or f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }} 시설 안내</a>{% if f.details %} ({{ details_checked }} 확인){% elif collected %} ({{ collected }} 확인){% endif %}. 요금과 운영시간은 바뀔 수 있으니 예약 전에 공식 안내를 확인하세요.</p>

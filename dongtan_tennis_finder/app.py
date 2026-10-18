@@ -35,6 +35,7 @@ import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 from facility_details import DETAILS_CHECKED
 from articles import ARTICLES_WRITTEN, articles_for
+from compare import compare_rows, highlights
 from content import CITY_KEYWORDS, CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
@@ -183,7 +184,7 @@ def index():
 
 @app.get("/about")
 def about():
-    return render_template("about.html")
+    return render_template("about.html", details_checked=DETAILS_CHECKED)
 
 
 @app.get("/privacy")
@@ -223,8 +224,9 @@ def court_page(slug: str):
         "@type": "FAQPage",
         "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq],
     } if faq else None
-    nearby = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"] and x["slug"] != slug][:6]
-    return render_template("court.html", f=f, nearby=nearby, jsonld=jsonld, faq_jsonld=faq_jsonld,
+    same_city = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"]]
+    return render_template("court.html", f=f, jsonld=jsonld, faq_jsonld=faq_jsonld,
+                           compare=compare_rows(same_city), highlights=highlights(f["name"], same_city),
                            collected=INFO_COLLECTED, details_checked=DETAILS_CHECKED)
 
 
@@ -284,7 +286,8 @@ def guide_page(slug: str):
     }
     return render_template(
         "guide.html", g=g, jsonld=jsonld, checked=GUIDE_CHECKED,
-        city_facilities=[x for x in facility_entries(_active_cities()) if x["city"] == g["city"]],
+        city_facilities=(city_facilities := [x for x in facility_entries(_active_cities()) if x["city"] == g["city"]]),
+        compare=compare_rows(city_facilities),
         booking_url=city["booking_url"], booking_name=city["booking_name"],
     )
 
