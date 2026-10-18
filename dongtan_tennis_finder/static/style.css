@@ -1021,3 +1021,36 @@ footer p {
 .court-row.long .court-name {
   padding-top: 0;
 }
+
+/* 정보 글(/tips/...)의 비교 표: 좁은 화면에서는 표만 가로로 스크롤 */
+.table-scroll {
+  overflow-x: auto;
+  margin: 8px 0 14px;
+}
+
+.info-table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.info-table th,
+.info-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+  border-bottom: 1px dotted var(--rule);
+}
+
+.info-table thead th {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--rule);
+}
+
+.info-table tbody th {
+  font-weight: 600;
+}

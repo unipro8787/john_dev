@@ -34,6 +34,7 @@ import gyeongju_client
 import hscity_client
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 from facility_details import DETAILS_CHECKED
+from articles import ARTICLES_WRITTEN, articles_for
 from content import CITY_KEYWORDS, CITY_SLUGS, FACILITY_BY_SLUG, FACILITY_SLUGS, GUIDE_CHECKED, GUIDES, INFO_COLLECTED, facility_entries
 
 # 예약 시스템(source)별 월 단위 조회 함수
@@ -98,8 +99,8 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 
 SITE_NAME = "테니스코트 빈자리 찾기"
-POLICY_EFFECTIVE = "2026-10-05"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-12"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+POLICY_EFFECTIVE = "2026-10-18"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-18"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -232,9 +233,36 @@ def _active_guides() -> dict:
     return {slug: g for slug, g in GUIDES.items() if g["city"] in names}
 
 
+def _active_articles() -> dict:
+    return articles_for({c["name"] for c in _active_cities()})
+
+
 @app.get("/guide")
 def guide_index():
-    return render_template("guides.html", guides=_active_guides(), checked=GUIDE_CHECKED)
+    return render_template("guides.html", guides=_active_guides(), articles=_active_articles(), checked=GUIDE_CHECKED)
+
+
+@app.get("/tips/<slug>")
+def article_page(slug: str):
+    articles = _active_articles()
+    a = articles.get(slug)
+    if not a:
+        abort(404)
+    site = _site_url()
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": a["title"],
+        "description": a["summary"],
+        "inLanguage": "ko",
+        "datePublished": ARTICLES_WRITTEN,
+        "dateModified": ARTICLES_WRITTEN,
+        "mainEntityOfPage": f"{site}{url_for('article_page', slug=slug)}",
+        "publisher": {"@type": "Organization", "name": SITE_NAME},
+    }
+    others = {k: v for k, v in articles.items() if k != slug}
+    return render_template("article.html", a=a, jsonld=jsonld, others=others, guides=_active_guides(),
+                           written=ARTICLES_WRITTEN, details_checked=DETAILS_CHECKED)
 
 
 @app.get("/guide/<slug>")
@@ -298,6 +326,7 @@ def sitemap_xml():
         (url_for("courts_index"), "0.8"),
         (url_for("guide_index"), "0.8"),
         *[(url_for("guide_page", slug=s), "0.7") for s in _active_guides()],
+        *[(url_for("article_page", slug=s), "0.6") for s in _active_articles()],
         *[(url_for("court_page", slug=f["slug"]), "0.7") for f in facility_entries(_active_cities())],
         (url_for("about"), "0.5"),
         (url_for("contact"), "0.3"),

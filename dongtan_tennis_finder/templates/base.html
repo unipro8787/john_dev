@@ -49,7 +49,7 @@
       {% set ep = request.endpoint %}
       <a href="{{ url_for('index') }}"{% if ep == 'index' %} aria-current="page"{% endif %}>빈 코트 검색</a>
       <a href="{{ url_for('courts_index') }}"{% if ep in ('courts_index', 'court_page') %} aria-current="page"{% endif %}>테니스장</a>
-      <a href="{{ url_for('guide_index') }}"{% if ep in ('guide_index', 'guide_page') %} aria-current="page"{% endif %}>예약 가이드</a>
+      <a href="{{ url_for('guide_index') }}"{% if ep in ('guide_index', 'guide_page', 'article_page') %} aria-current="page"{% endif %}>예약 가이드</a>
       <a href="{{ url_for('about') }}"{% if ep == 'about' %} aria-current="page"{% endif %}>소개</a>
     </nav>
   </div>

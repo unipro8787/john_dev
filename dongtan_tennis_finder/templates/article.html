@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }} · {{ site_name }}{% endblock %}
+{% block description %}{{ a.summary }}{% endblock %}
+
+{% block head %}
+<script type="application/ld+json">{{ jsonld | tojson }}</script>
+{% endblock %}
+
+{% block content %}
+<article class="panel info guide">
+  <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › <a href="{{ url_for('guide_index') }}">예약 가이드</a> › {{ a.title }}</nav>
+  <h2>{{ a.title }}</h2>
+  <p class="lead">{{ a.summary }}</p>
+
+  {% for heading, blocks in a.sections %}
+  <h3>{{ heading }}</h3>
+  {% for b in blocks %}
+    {% if b is string %}<p>{{ b }}</p>
+    {% elif b[0] == 'table' %}
+    <div class="table-scroll"><table class="info-table">
+      <thead><tr>{% for h in b[1] %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for row in b[2] %}<tr>{% for cell in row %}{% if loop.first %}<th scope="row">{{ cell }}</th>{% else %}<td>{{ cell }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<ul>{% for item in b[1] %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+  {% endfor %}
+  {% endfor %}
+
+  <h3>지역별 예약 방법</h3>
+  <ul class="court-links">
+    {% for slug, g in guides.items() %}<li><a href="{{ url_for('guide_page', slug=slug) }}">{{ g.title }}</a></li>{% endfor %}
+  </ul>
+  {% if others %}
+  <h3>함께 읽으면 좋은 글</h3>
+  <ul class="court-links">
+    {% for slug, o in others.items() %}<li><a href="{{ url_for('article_page', slug=slug) }}">{{ o.title }}</a></li>{% endfor %}
+  </ul>
+  {% endif %}
+  <p><a class="cta" href="{{ url_for('index') }}">빈 코트 검색하기</a></p>
+
+  <p class="muted source">각 예약 사이트의 공식 시설 안내({{ details_checked }} 확인)를 바탕으로 이 사이트가 정리한 글입니다 ({{ written }} 작성). 요금과 규정은 바뀔 수 있으니 예약 전에 각 기관의 공식 안내를 함께 확인하세요.</p>
+</article>
+{% endblock %}

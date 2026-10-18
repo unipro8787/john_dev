@@ -15,6 +15,17 @@
     </li>
     {% endfor %}
   </ul>
+  {% if articles %}
+  <h3>지역을 비교해 보는 글</h3>
+  <ul class="guide-list">
+    {% for slug, a in articles.items() %}
+    <li>
+      <a href="{{ url_for('article_page', slug=slug) }}"><b>{{ a.title }}</b></a>
+      <p class="muted">{{ a.summary }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   <h3>어느 지역이든 공통으로 알아 두면 좋은 것</h3>
   <ul>
     <li>공공 테니스장은 대부분 회원가입과 로그인이 필요합니다. 예약이 열리는 날 전에 미리 가입해 두세요.</li>
