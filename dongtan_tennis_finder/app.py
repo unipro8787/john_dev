@@ -25,7 +25,7 @@ from datetime import date, datetime, timedelta
 
 from urllib.parse import urlparse
 
-from flask import Flask, Response, abort, jsonify, redirect, render_template, request, url_for
+from flask import Flask, Response, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 import requests
 
 import bucheon_client
@@ -319,6 +319,13 @@ def robots_txt():
         "",
     ])
     return Response(body, mimetype="text/plain")
+
+
+@app.get("/favicon.ico")
+def favicon():
+    # 브라우저·검색 크롤러는 <link rel="icon">과 별개로 루트의 /favicon.ico를 먼저 찾는다
+    return send_from_directory(os.path.join(app.static_folder, "icons"), "favicon.ico",
+                               mimetype="image/vnd.microsoft.icon", max_age=86400)
 
 
 @app.get("/sitemap.xml")
