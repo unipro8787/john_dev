@@ -47,9 +47,20 @@ def hscity(name: str, courts: dict[str, int]) -> dict:
     url = f"https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx={idx}"
     page = S.get(url, timeout=30).text
     p = _pairs(page)
-    loc = re.search(r"(경기\s*화성시[^,<\"']+?)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)", page)
+    # 카카오 지도 링크 "link/map/주소,위도,경도". 주소 앞부분은 시설마다 "경기도 화성시 …", "화성시 …", "석우동 4"처럼
+    # 제각각이라 링크 전체를 잡고 빠진 시·도만 앞에 붙인다 (예전엔 "경기 화성시"만 잡아 8곳이 비었음)
+    loc = re.search(r"link/map/([^,<\"']+?)\s*,\s*(\d+\.\d+)\s*,\s*(\d+\.\d+)", page)
+    address = loc.group(1).strip() if loc else None
+    if address and "화성시" not in address:
+        address = "화성시 " + address
+    if address and not address.startswith("경기"):
+        address = "경기도 " + address
+    # 번지 뒤에 붙은 설명("… 168 비봉 습지공원 배드민턴장", "… 220-1 전승신병교육대대 입구")은 잘라 낸다
+    tidy = re.match(r".*?(?:로|길|동|리|가)\s*\d+(?:-\d+)?", address) if address else None
+    if tidy:
+        address = tidy.group(0)
     return {
-        "address": loc.group(1).strip() if loc else None,
+        "address": address,
         "lat": float(loc.group(2)) if loc else None,
         "lng": float(loc.group(3)) if loc else None,
         "hours": p.get("사용시간"),
@@ -62,12 +73,35 @@ def hscity(name: str, courts: dict[str, int]) -> dict:
     }
 
 
+_BUCHEON_DONG: dict[str, str] | None = None
+
+
+def _bucheon_dong(name: str) -> str | None:
+    """부천 상세 페이지의 주소 칸은 비어 있어서(지도 버튼도 빈 값), 공식 시설 목록에 적힌 동만 쓴다."""
+    global _BUCHEON_DONG
+    if _BUCHEON_DONG is None:
+        page = S.get("https://reserv.bucheon.go.kr/site/main/lending/lendingList?inst_cate=01&lending_inst_nm=tennis",
+                     timeout=30).text
+        text = _clean(re.sub(r"<script.*?</script>|<style.*?</style>", "", page, flags=re.S))
+        _BUCHEON_DONG = {}
+        for dong, fac in re.findall(r"접수(?:중|종료)\s+(\S+동)\s+(.+?)\s+부천시(?:체육회|테니스협회)", text):
+            _BUCHEON_DONG.setdefault(fac.strip(), dong)
+    return _BUCHEON_DONG.get(name)
+
+
 def bucheon(name: str, courts: dict[str, int]) -> dict:
     seq = next(iter(courts.values()))
     url = f"https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq={seq}&inst_cate=01&lending_inst_nm=tennis"
-    p = _pairs(S.get(url, timeout=30).text)
+    page = S.get(url, timeout=30).text
+    p = _pairs(page)
     slots = p.get("대관시간", "")
+    # 시설 설명 글에 도로명 주소가 적힌 곳(예: 부천실내테니스장)만 번지까지, 나머지는 동까지만
+    body = _clean(re.sub(r"<script.*?</script>|<style.*?</style>", "", page, flags=re.S))
+    full = [a for a in re.findall(r"경기도 부천시 \S+로\s*\d+(?:-\d+)?", body) if "길주로 210" not in a]  # 210은 시청(바닥글)
+    dong = _bucheon_dong(name)
     return {
+        "address": full[0] if full else None,
+        "area": f"경기도 부천시 {dong}" if dong and not full else None,
         "hours": (slots.split(",")[0].split("~")[0].strip() + "~" + slots.split(",")[-1].split("~")[-1].strip()) if slots else None,
         "slot_unit": "2시간" if slots else None,
         "days": p.get("대관요일"),
@@ -103,7 +137,7 @@ def gangnam(name: str, courts: dict[str, str]) -> dict:
     ).json()
     url = f"https://life.gangnam.go.kr/fmcs/{GANGNAM_INFO_PAGES[name]}"
     text = _clean(re.sub(r"<script.*?</script>|<style.*?</style>", "", S.get(url, timeout=30).text, flags=re.S))
-    addr = re.search(r"주소\s+(서울\s*강남구[^지]+?)\s+(?:지하철|버스|층별)", text)
+    addr = re.search(r"주소\s+(서울(?:특별시)?\s*강남구[^지]+?)\s+(?:지하철|버스|층별)", text)
     hours = re.search(r"운영시간\s+(\d{2}:\d{2}\s*~\s*\d{2}:\d{2})", text)
     subway = re.search(r"지하철\s+(지하철[^버]+?)\s+버스", text)
     return {

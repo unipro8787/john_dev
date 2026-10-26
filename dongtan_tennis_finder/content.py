@@ -77,6 +77,11 @@ FACILITY_ALIASES = {
     "강남세곡체육공원 테니스장": "세곡 테니스장",
 }
 
+# 시설 사진: static/photos/<slug>.jpg 를 넣으면 시설 페이지에 나온다. 직접 찍었거나 이용 허락을 받은 사진만 넣는다
+# (공식 예약 사이트 사진에는 공공누리 표시가 없어 그대로 가져오지 않음). 허락받은 사진은 출처를 여기 적는다.
+_PHOTO_DIR = Path(__file__).resolve().parent / "static" / "photos"
+PHOTO_CREDITS: dict[str, str] = {}  # slug → "사진: 화성도시공사 제공" 같은 출처 문구 (직접 찍은 사진은 비워 둠)
+
 _INFO_PATH = Path(__file__).resolve().parent / "data" / "facility_info.json"
 _INFO = json.loads(_INFO_PATH.read_text(encoding="utf-8")) if _INFO_PATH.exists() else {"collected": None, "facilities": {}}
 INFO_COLLECTED = _INFO.get("collected")
@@ -104,6 +109,9 @@ def facility_entries(cities: list[dict] | None = None) -> list[dict]:
                     "area_kw": REGION_KEYWORDS.get((city["name"], region), CITY_KEYWORDS[city["name"]]),
                     "alias": FACILITY_ALIASES.get(name),
                     "details": FACILITY_DETAILS.get(name, {}),
+                    "photo": (f"photos/{FACILITY_SLUGS[name]}.jpg"
+                              if (_PHOTO_DIR / f"{FACILITY_SLUGS[name]}.jpg").exists() else None),
+                    "photo_credit": PHOTO_CREDITS.get(FACILITY_SLUGS[name]),
                 })
     return out
 

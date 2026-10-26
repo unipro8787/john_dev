@@ -1,5 +1,5 @@
 {
-  "collected": "2026-10-05",
+  "collected": "2026-10-26",
   "facilities": {
     "여울공원 테니스장": {
       "address": "경기 화성시 동탄구 오산동 1060",
@@ -14,6 +14,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=193"
     },
     "금반저류지 테니스장": {
+      "address": "경기도 화성시 동탄구 반송동 633-1",
+      "lat": 37.184715,
+      "lng": 127.082256,
       "hours": "[평일] 14:00~22:00 [휴일] 14:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -23,6 +26,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=212"
     },
     "왕배산체육공원 테니스장": {
+      "address": "경기도 화성시 동탄구 왕배산4길 30",
+      "lat": 37.1786152167379,
+      "lng": 127.127304296353,
       "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -31,6 +37,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=230"
     },
     "중동 테니스장": {
+      "address": "경기도 화성시 동탄구 원고매로 160",
+      "lat": 37.2193712350299,
+      "lng": 127.118696884148,
       "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -39,6 +48,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=245"
     },
     "돌모루 근린공원 테니스장": {
+      "address": "경기도 화성시 석우동 4",
+      "lat": 37.2235,
+      "lng": 127.0768,
       "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -48,6 +60,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=213"
     },
     "비봉체육공원 테니스장": {
+      "address": "경기도 화성시 만세구 새솔동 168",
+      "lat": 37.2635793674781,
+      "lng": 126.845375228735,
       "hours": "[평일] 12:00~22:00 [휴일] 06:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -57,6 +72,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=207"
     },
     "도원체육공원 테니스장": {
+      "address": "경기도 화성시 만세구 향남읍 행정동로 96",
+      "lat": 37.133541,
+      "lng": 126.928702,
       "hours": "[평일] 12:00~17:00 [휴일] 이용불가",
       "operator": "화성도시공사 체육시설",
       "payment": "-",
@@ -65,6 +83,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=226"
     },
     "매송안보테마공원 테니스장": {
+      "address": "경기도 화성시 효행구 매송면 어천리 220-1",
+      "lat": 37.2534,
+      "lng": 126.9204,
       "hours": "[평일] 이용불가 [휴일] 06:00~16:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -74,6 +95,9 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=209"
     },
     "경기화성바이오밸리(마도) 테니스장": {
+      "address": "경기도 화성시 만세구 마도면 청원산단5길 27",
+      "lat": 37.1697383157148,
+      "lng": 126.7710944476,
       "hours": "[평일] 06:00~22:00 [휴일] 06:00~22:00",
       "operator": "화성도시공사 체육시설",
       "payment": "온라인 결제",
@@ -82,6 +106,7 @@
       "source_url": "https://yeyak.hscity.go.kr/stadiumDetail.do?stadiumIdx=205"
     },
     "복사골테니스장": {
+      "area": "경기도 부천시 중2동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -91,6 +116,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=111&inst_cate=01&lending_inst_nm=tennis"
     },
     "원미테니스장": {
+      "area": "경기도 부천시 원미1동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -100,6 +126,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=112&inst_cate=01&lending_inst_nm=tennis"
     },
     "종합운동장테니스장": {
+      "area": "경기도 부천시 춘의동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -109,6 +136,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=115&inst_cate=01&lending_inst_nm=tennis"
     },
     "부천체육관테니스장(하드)": {
+      "area": "경기도 부천시 중4동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -118,6 +146,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=192&inst_cate=01&lending_inst_nm=tennis"
     },
     "부천실내테니스장": {
+      "address": "경기도 부천시 석천로 293",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -127,6 +156,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=195&inst_cate=01&lending_inst_nm=tennis"
     },
     "해그늘체육공원 테니스장": {
+      "area": "경기도 부천시 상3동",
       "hours": "10:00~18:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -136,6 +166,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=194&inst_cate=01&lending_inst_nm=tennis"
     },
     "해그늘체육공원 테니스장(인조잔디)": {
+      "area": "경기도 부천시 상3동",
       "hours": "10:00~18:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -145,6 +176,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=205&inst_cate=01&lending_inst_nm=tennis"
     },
     "성주산체육공원테니스장": {
+      "area": "경기도 부천시 소사본동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -154,6 +186,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=116&inst_cate=01&lending_inst_nm=tennis"
     },
     "소사배수지테니스장": {
+      "area": "경기도 부천시 소사본1동",
       "hours": "06:00~21:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -163,6 +196,7 @@
       "source_url": "https://reserv.bucheon.go.kr/site/main/lending/lendingDetail?lending_info_seq=114&inst_cate=01&lending_inst_nm=tennis"
     },
     "남부수자원테니스장": {
+      "area": "경기도 부천시 옥길동",
       "hours": "06:00~22:00",
       "slot_unit": "2시간",
       "days": "월,화,수,목,금,토,일",
@@ -205,7 +239,7 @@
       "source_url": "https://life.gangnam.go.kr/fmcs/107"
     },
     "포이테니스장": {
-      "address": "서울 강남구 개포동 1274",
+      "address": "서울특별시 강남구 개포동 1274",
       "hours": "06:00~22:00",
       "phone": "02-2176-0876",
       "confirm_type": "심의승인",
@@ -213,6 +247,7 @@
       "source_url": "https://life.gangnam.go.kr/fmcs/108"
     },
     "강남세곡체육공원 테니스장": {
+      "address": "서울특별시 강남구 세곡동 산 1-7, 강남세곡체육공원",
       "subway": "지하철8호선 복정역 3번출구 도보 14분(강남세곡체육공원 내)",
       "phone": "02-2176-0870",
       "confirm_type": "심의승인",

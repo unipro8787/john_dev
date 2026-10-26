@@ -1064,3 +1064,19 @@ footer p {
 .compare-table tr.current td {
   background: color-mix(in srgb, var(--rule) 45%, transparent);
 }
+
+.court-photo {
+  margin: 12px 0 16px;
+}
+.court-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.court-photo figcaption {
+  margin-top: 4px;
+  font-size: 0.85em;
+}
