@@ -402,6 +402,13 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
             page.click("#costSumText")
             page.wait_for_timeout(1200)
             new_dialogs = dialog_messages[dialogs_before:]
+            if new_dialogs and "하루에 한 코트" in new_dialogs[-1]:
+                # 2026-10-26 실전: 보안문자는 통과했는데 그 날짜에 이미 예약이 있어서 거절됐다.
+                # 다른 코트도 똑같이 거절되므로 보안문자를 다시 묻지 말고 이 날짜/시간대를 통째로 접는다
+                # (success_event는 나머지 코트 창들을 멈추는 신호로만 쓰인다 - 결과는 비어 있어 성공으로 기록되지 않음).
+                _log(f"  -> {court_num}번 코트: {new_dialogs[-1]} 이 날짜는 이미 예약이 있어 나머지 코트도 모두 중단합니다.")
+                success_event.set()
+                return None
             if new_dialogs:
                 # 사이트가 직접 알림창으로 알려주는 실패 사유 (예: "보안문자가 일치하지 않습니다" 또는
                 # "이미 마감/선점된 시간대입니다" 등 - 후자라면 보안문자를 다시 입력해도 소용없지만,
