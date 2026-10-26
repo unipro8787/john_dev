@@ -330,8 +330,14 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
         captcha_bytes = page.locator("#capchaImage").screenshot()
         if not _is_captcha_owner(captcha_token):
             captcha_bytes = click_captcha_refresh(page, court_num, captcha_bytes)
-        for attempt in range(5):
+        # 실제로 제출한 횟수만 5회로 제한한다. 여러 날짜를 돌리면 다른 날짜의 코트 창들이 페이지를 열 때마다
+        # 보안문자를 빼앗겨 새로 받아야 하는데, 그건 사람이 틀린 게 아니니 기회를 깎지 않는다 (전체 라운드는 15회로 안전 제한).
+        submits = 0
+        for attempt in range(15):
             if success_event.is_set():
+                return None
+            if submits >= 5:
+                _log(f"  -> {court_num}번 코트: 보안문자 확인을 5회 실패했습니다. 이 코트를 건너뜁니다.")
                 return None
             captcha_path = SCRIPT_DIR / f"captcha_{court_num}_{attempt}.png"
             captcha_bytes = page.locator("#capchaImage").screenshot()
@@ -397,6 +403,7 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
                 _log(f"  -> {court_num}번 코트: 입력 직전에 다른 창이 보안문자를 새로 받아 무효가 됐습니다. 제출하지 않고 새로 받아 다시 보냅니다.")
                 click_captcha_refresh(page, court_num, captcha_bytes)
                 continue
+            submits += 1
             page.fill('input[name="capchaText"]', code)
             dialogs_before = len(dialog_messages)
             page.click("#costSumText")
@@ -443,7 +450,7 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
                 f"(알림창은 없었음, 표시된 텍스트: {fee_text.strip()!r}, 화면 캡처: {debug_fee_path.name}). 다시 시도합니다."
             )
         else:
-            _log(f"  -> {court_num}번 코트: 보안문자 확인을 5회 실패했습니다. 이 코트를 건너뜁니다.")
+            _log(f"  -> {court_num}번 코트: 보안문자를 15번 새로 받는 동안 확인되지 않았습니다. 이 코트를 건너뜁니다.")
             return None
 
         # --- 신청자 정보 ---
