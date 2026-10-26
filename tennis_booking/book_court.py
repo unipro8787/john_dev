@@ -192,6 +192,19 @@ def find_time_slot_state(page: Page, label: str) -> tuple[str, int] | None:
     return ("disabled" if disabled else "available"), idx
 
 
+# 보안문자 정답은 페이지가 아니라 서버 세션(JSESSIONID)에 저장된다 - 이미지 주소가
+# /capchaAjax.do?captchaWidth=200&captchaHeight=50 뿐이고 페이지별 토큰이 없다(2026-10-26 실사이트 확인).
+# 그런데 코트 창들은 한 번 로그인한 쿠키를 공유하므로, 어느 창이든 보안문자 이미지를 새로 받는
+# 순간 다른 모든 창에 보이는 보안문자가 무효가 된다 - "마지막으로 이미지를 받은 창"만 유효하다.
+# 그래서 창마다 capchaAjax.do 요청을 감시해 마지막 주인을 여기에 기록해 두고,
+# 내 창이 주인이 아니면 사람에게 보여주기/제출하기 전에 새로고침해서 주인을 되찾는다.
+_CAPTCHA_OWNER: list[object | None] = [None]
+
+
+def _is_captcha_owner(token: object | None) -> bool:
+    return token is None or _CAPTCHA_OWNER[0] is token
+
+
 def click_captcha_refresh(page: Page, court_num: int, prev_bytes: bytes) -> bytes:
     """새로고침 버튼을 누르고, 실제로 새 보안문자 이미지가 뜰 때까지 기다린다 (최대 ~3초).
     2026-09-07 실전에서 새로고침 버튼 클릭 자체는 성공(예외 없음)했는데도 재시도 5번 내내
@@ -220,7 +233,7 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
                 time_label: str, config: dict, remote_server: RemoteCaptchaServer,
                 public_url: str, dialog_messages: list[str],
                 success_event: threading.Event, captcha_lock: threading.Lock,
-                queue_event: threading.Event) -> dict | None:
+                queue_event: threading.Event, captcha_token: object | None = None) -> dict | None:
     if success_event.is_set():
         return None
     print(f"\n=== {court_num}번 코트 (stadiumIdx={stadium_idx}) 확인 중 ===")
@@ -310,6 +323,13 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
 
     try:
         # --- 보안문자: PC 터미널 또는 폰(카카오 링크) 중 먼저 입력되는 쪽을 사용 ---
+        # 2026-08-27~10-26 실전 로그에서 첫 시도가 거의 매번 "일치하지 않습니다"로 실패하고
+        # 새로고침 뒤 두 번째 시도는 성공했다 - 첫 이미지는 이 창이 페이지를 열 때 받은 것인데,
+        # 그 뒤에 다른 코트 창들이 페이지를 열며 같은 세션의 보안문자를 덮어써서 이미 무효였기 때문
+        # (_CAPTCHA_OWNER 설명 참고). 그래서 락을 잡은 직후 내 창이 마지막 주인이 아니면 먼저 새로 받는다.
+        captcha_bytes = page.locator("#capchaImage").screenshot()
+        if not _is_captcha_owner(captcha_token):
+            captcha_bytes = click_captcha_refresh(page, court_num, captcha_bytes)
         for attempt in range(5):
             if success_event.is_set():
                 return None
@@ -344,14 +364,24 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
             # 이어서 진행되고, run_once가 끝까지 가서 결과 파일/카톡 요약이 나간다.
             deadline = time.monotonic() + CAPTCHA_WAIT_TIMEOUT_S
             got = None
+            stolen = False
             while time.monotonic() < deadline:
                 if success_event.is_set():
                     return None
+                if not _is_captcha_owner(captcha_token):
+                    # 사람이 읽는 사이 다른 창(늦게 뜬 코트나 다른 날짜)이 보안문자를 새로 받아
+                    # 지금 보이는 이미지가 무효가 됐다 - 틀린 답을 제출해 시도를 날리기 전에 새로 받아 다시 보낸다.
+                    stolen = True
+                    break
                 try:
                     got = remote_server.result_queue.get(timeout=0.5)
                     break
                 except queue.Empty:
                     continue
+            if stolen:
+                _log(f"  -> {court_num}번 코트: 다른 창이 보안문자를 새로 받아 지금 이미지가 무효가 됐습니다. 새로 받아 다시 보냅니다.")
+                click_captcha_refresh(page, court_num, captcha_bytes)
+                continue
             if got is None:
                 _log(
                     f"  -> {court_num}번 코트: 보안문자 입력 대기 {CAPTCHA_WAIT_TIMEOUT_S}초 초과 "
@@ -361,6 +391,10 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
             source, code = got
             code = code.strip()
             if code.lower() == "r":
+                click_captcha_refresh(page, court_num, captcha_bytes)
+                continue
+            if not _is_captcha_owner(captcha_token):
+                _log(f"  -> {court_num}번 코트: 입력 직전에 다른 창이 보안문자를 새로 받아 무효가 됐습니다. 제출하지 않고 새로 받아 다시 보냅니다.")
                 click_captcha_refresh(page, court_num, captcha_bytes)
                 continue
             page.fill('input[name="capchaText"]', code)
@@ -420,6 +454,12 @@ def book_court(page: Page, court_num: int, stadium_idx: int, target_date: dateti
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(1000)
 
+        # 성공 즉시(락을 놓기 전에) success_event부터 세운다 - 그렇지 않으면
+        # book_court()가 반환되면서 finally에서 락을 먼저 놓고, worker()가
+        # success_event.set()을 부르기까지의 틈에 대기 중이던 다른 코트가
+        # 락을 가로채 필요 없는 보안문자 창을 띄우는 경합이 생긴다
+        # (2026-09-20 실전에서 2번 코트가 이렇게 떴다가 바로 버려진 사고 재현).
+        success_event.set()
         return {
             "court": court_num,
             "stadium_idx": stadium_idx,
@@ -510,10 +550,16 @@ def book_slot_parallel(cookies: list[dict], target_date: datetime, time_label: s
                     "dialog",
                     lambda d: (dialog_messages.append(d.message), _log(f"[{court_num}번 코트] 사이트 알림: {d.message}"), d.accept()),
                 )
+                # 이 창이 보안문자 이미지를 받을 때마다 세션 보안문자의 주인이 된다 (_CAPTCHA_OWNER 참고)
+                captcha_token = object()
+                page.on(
+                    "request",
+                    lambda r: _CAPTCHA_OWNER.__setitem__(0, captcha_token) if "capchaAjax.do" in r.url else None,
+                )
                 result = book_court(
                     page, court_num, stadium_idx, target_date, time_label, config,
                     remote_server, public_url, dialog_messages, success_event, captcha_lock,
-                    queue_event,
+                    queue_event, captcha_token,
                 )
                 browser.close()
         except Exception as exc:  # noqa: BLE001
