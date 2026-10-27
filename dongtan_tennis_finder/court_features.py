@@ -17,7 +17,7 @@ FEATURES: dict[str, dict] = {
     "여울공원 테니스장": {"indoor": False, "surface": "인조잔디", "light": True},     # 야간 조명 버튼 박스 안내, 바닥은 운영자 확인
     "금반저류지 테니스장": {"indoor": False, "surface": None, "light": "1번 코트만 조명"},  # 2번 코트는 조명시설 없음
     "왕배산체육공원 테니스장": {"indoor": False, "surface": "하드", "light": True},   # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
-    "중동 테니스장": {"indoor": False, "surface": None, "light": True},              # 조명 OFF 스위치 안내
+    "중동 테니스장": {"indoor": False, "surface": "인조잔디", "light": True},         # 조명 OFF 스위치 안내, 바닥은 운영자 확인
     "돌모루 근린공원 테니스장": {"indoor": False, "surface": "하드", "light": True},  # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
     "비봉체육공원 테니스장": {"indoor": False, "surface": None, "light": None},
     "도원체육공원 테니스장": {"indoor": False, "surface": None, "light": None},       # 온라인은 평일 12~17시뿐
