@@ -14,6 +14,7 @@
   const resultsEl = document.getElementById("results");
 
   let selectedFacilities = new Set();
+  let searchSeq = 0; // 늦게 도착한 날씨가 새 검색 결과에 섞이지 않게 검색마다 번호를 매긴다
   let allFacilities = [];
 
   // toISOString()은 UTC라 한국 시간 자정~오전 9시에는 하루 전 날짜가 된다
@@ -249,6 +250,7 @@
 
   function slotChip(s) {
     const chip = el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""));
+    Object.assign(chip.dataset, { facility: s.facility, date: s.date, begin: s.begin || "", end: s.end || "" });
     // 경주처럼 날짜 단위로만 공개하는 곳은 시간 대신 "빈 시간 있음"으로 보여 준다
     chip.textContent = s.day_only ? "그날 빈 시간 있음" : `${s.begin}~${s.end}`;
     if (s.day_only) chip.title = "몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인하세요";
@@ -312,6 +314,8 @@
         } else {
           name.textContent = facility;
         }
+        name.dataset.facility = facility;
+        name.dataset.date = dateStr;
         block.appendChild(name);
 
         // 부천처럼 시설 단위로만 나오는 곳은 코트 이름 칸을 비운다
@@ -332,6 +336,68 @@
     }
   }
 
+  // 빈 시간(시작~끝)에 걸친 시간별 예보에서 비·바람을 찾는다. 시간별 예보가 없는 날은 null.
+  function slotWeather(hours, date, begin, end) {
+    const from = +begin.slice(0, 2);
+    const to = +end.slice(0, 2) + (end.slice(3) === "00" ? 0 : 1);
+    let rain = 0, wind = 0, seen = false;
+    for (let h = from; h < (to > from ? to : 24); h++) {
+      const w = hours[`${date} ${String(h).padStart(2, "0")}`];
+      if (!w) continue;
+      seen = true;
+      rain += w.rain || 0;
+      wind = Math.max(wind, w.wind || 0);
+    }
+    return seen ? { rain: Math.round(rain * 10) / 10, wind } : null;
+  }
+
+  // 결과를 먼저 보여 준 뒤 날씨를 따로 받아 시설 이름 옆(그날 날씨)과 빈 시간 칸(비·바람)에 붙인다
+  async function addWeather(items, seq) {
+    const facilities = [...new Set(items.map((r) => r.facility))];
+    if (!facilities.length) return;
+    let wx;
+    try {
+      const params = new URLSearchParams();
+      facilities.forEach((f) => params.append("facility", f));
+      const res = await fetch(`/api/weather?${params}`);
+      if (!res.ok) return;
+      wx = await res.json();
+    } catch {
+      return; // 날씨는 덤이라 실패해도 검색 결과는 그대로 둔다
+    }
+    if (seq !== searchSeq) return;
+
+    resultsEl.querySelectorAll(".fac-name").forEach((name) => {
+      const w = wx[name.dataset.facility];
+      const d = w && w.days[name.dataset.date];
+      if (!d || !d.icon) return;
+      const tag = el("span", "fac-wx", `${d.icon}${d.tmax != null ? ` ${d.tmin}°/${d.tmax}°` : ""}${d.rain >= 0.1 ? ` · 비 ${d.rain}mm` : ""}`);
+      tag.title = `${d.name}, 06~22시 기준${w.indoor ? " (실내 코트)" : ""}`;
+      name.appendChild(tag);
+    });
+
+    let marked = 0;
+    resultsEl.querySelectorAll(".time-slot").forEach((chip) => {
+      const w = wx[chip.dataset.facility];
+      if (!w || !chip.dataset.begin) return;
+      const s = slotWeather(w.hours, chip.dataset.date, chip.dataset.begin, chip.dataset.end);
+      const rainy = s && s.rain >= 0.1, windy = s && s.wind >= 6;
+      if (!rainy && !windy) return;
+      marked++;
+      if (rainy) chip.classList.add("rainy");
+      chip.textContent += `${rainy ? " 🌧" : ""}${windy ? " 💨" : ""}`;
+      const note = [rainy && `비 ${s.rain}mm 예보`, windy && `바람 최대 ${s.wind}m/s`].filter(Boolean).join(", ");
+      chip.title = chip.title ? `${chip.title} · ${note}` : note;
+    });
+
+    const summary = resultsEl.querySelector(".result-summary");
+    if (summary) {
+      const legend = el("span", "wx-legend",
+        `${marked ? "🌧 비 예보 · 💨 바람 초속 6m 이상 · " : ""}날씨: 노르웨이 기상청(MET Norway) 예보, CC BY 4.0`);
+      summary.appendChild(legend);
+    }
+  }
+
   async function runSearch() {
     const start = startInput.value;
     const end = endInput.value || start;
@@ -345,6 +411,7 @@
       return;
     }
 
+    const seq = ++searchSeq;
     searchBtn.disabled = true;
     searchBtn.textContent = "찾는 중…";
     setStatus("각 예약 사이트에서 빈 시간을 모으는 중이에요…");
@@ -365,6 +432,7 @@
       }
 
       renderResults(data.results);
+      addWeather(data.results, seq);
     } catch (err) {
       setStatus("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", true);
     } finally {

@@ -1126,3 +1126,16 @@ footer p {
   .weather-days { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
   .weather-days li { font-size: 12px; }
 }
+
+/* 검색 결과의 날씨: 시설 이름 옆 그날 날씨, 요약 줄 아래 범례 */
+.fac-wx {
+  margin-left: 8px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wx-legend {
+  flex-basis: 100%;
+  font-size: 12px;
+}

@@ -198,6 +198,10 @@ def courts_index():
     return render_template("courts.html", facility_list=facility_entries(_active_cities()))
 
 
+def _is_indoor(f: dict) -> bool:
+    return "실내" in (f["details"].get("surface") or f["name"])
+
+
 @app.get("/courts/<slug>")
 def court_page(slug: str):
     f = FACILITY_BY_SLUG.get(slug)
@@ -229,8 +233,7 @@ def court_page(slug: str):
     point = weather.point_for(f)
     forecast = weather.forecast(*point) if point else None
     return render_template("court.html", f=f, jsonld=jsonld, faq_jsonld=faq_jsonld,
-                           forecast=forecast, weather_approx=not info.get("lat"),
-                           indoor="실내" in (f["details"].get("surface") or f["name"]),
+                           forecast=forecast, weather_approx=not info.get("lat"), indoor=_is_indoor(f),
                            compare=compare_rows(same_city), highlights=highlights(f["name"], same_city),
                            collected=INFO_COLLECTED, details_checked=DETAILS_CHECKED)
 
@@ -484,6 +487,29 @@ def api_search():
             "results": results,
         }
     )
+
+
+@app.get("/api/weather")
+def api_weather():
+    # 검색 결과에 붙일 시설별 날씨. 검색과 따로 불러서 날씨 때문에 결과가 늦게 뜨지 않게 한다.
+    active = _active_facility_names()
+    names = [n for n in dict.fromkeys(request.args.getlist("facility")) if n in active]
+    facilities = [FACILITY_BY_SLUG[FACILITY_SLUGS[n]] for n in names]
+    points = {f["name"]: weather.point_for(f) for f in facilities}
+    unique = list({p for p in points.values() if p})
+    with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+        forecasts = dict(zip(unique, pool.map(lambda p: weather.forecast(*p), unique)))
+    out = {}
+    for f in facilities:
+        fc = forecasts.get(points[f["name"]])
+        if not fc:
+            continue
+        out[f["name"]] = {
+            "days": {d["date"]: {k: d[k] for k in ("icon", "name", "tmax", "tmin", "rain", "wind")} for d in fc["days"]},
+            "hours": {} if _is_indoor(f) else fc["hours"],  # 실내 코트는 시간대별 비·바람 표시를 하지 않는다
+            "indoor": _is_indoor(f),
+        }
+    return jsonify(out)
 
 
 if __name__ == "__main__":

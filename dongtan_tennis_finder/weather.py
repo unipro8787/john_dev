@@ -134,7 +134,8 @@ def _summarize(payload: dict) -> dict:
             sym = _symbol(p["symbol"])
             if sym[2] >= 4 and (worst is None or sym[2] > worst[2]):
                 worst = sym
-            if p["start"] <= lo.replace(hour=13) < end:
+            # 낮 날씨는 13시 구간으로 정하고, 13시가 이미 지난 오늘은 남은 시간의 첫 구간을 쓴다
+            if p["start"] <= lo.replace(hour=13) < end or noon is None:
                 noon = sym
         if not temps and noon is None:
             break  # 예보 범위를 넘었다
