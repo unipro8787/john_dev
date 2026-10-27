@@ -21,7 +21,7 @@ FEATURES: dict[str, dict] = {
     "돌모루 근린공원 테니스장": {"indoor": False, "surface": "하드", "light": True},  # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
     "비봉체육공원 테니스장": {"indoor": False, "surface": "마사토", "light": None},    # 바닥은 운영자 확인
     "도원체육공원 테니스장": {"indoor": False, "surface": "인조잔디", "light": None},  # 온라인은 평일 12~17시뿐, 바닥은 운영자 확인
-    "매송안보테마공원 테니스장": {"indoor": False, "surface": None, "light": None},    # 06~16시 운영
+    "매송안보테마공원 테니스장": {"indoor": False, "surface": "인조잔디", "light": None},  # 06~16시 운영, 바닥은 운영자 확인
     "경기화성바이오밸리(마도) 테니스장": {"indoor": False, "surface": None, "light": True},  # 조간 조명 설정 안내
     # 부천: 시설 안내에 코트 종류가 적혀 있다. 18~22시 야간 요금을 받는다(해그늘은 10~18시 무료 운영).
     "복사골테니스장": {"indoor": False, "surface": "하드·클레이", "light": True},
