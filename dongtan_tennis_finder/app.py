@@ -32,6 +32,7 @@ import bucheon_client
 import gangnam_client
 import gyeongju_client
 import hscity_client
+import weather
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 from facility_details import DETAILS_CHECKED
 from articles import ARTICLES_WRITTEN, articles_for
@@ -101,7 +102,7 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 SITE_NAME = "테니스코트 빈자리 찾기"
 POLICY_EFFECTIVE = "2026-10-18"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-18"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-27"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -225,7 +226,11 @@ def court_page(slug: str):
         "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq],
     } if faq else None
     same_city = [x for x in facility_entries(_active_cities()) if x["city"] == f["city"]]
+    point = weather.point_for(f)
+    forecast = weather.forecast(*point) if point else None
     return render_template("court.html", f=f, jsonld=jsonld, faq_jsonld=faq_jsonld,
+                           forecast=forecast, weather_approx=not info.get("lat"),
+                           indoor="실내" in (f["details"].get("surface") or f["name"]),
                            compare=compare_rows(same_city), highlights=highlights(f["name"], same_city),
                            collected=INFO_COLLECTED, details_checked=DETAILS_CHECKED)
 

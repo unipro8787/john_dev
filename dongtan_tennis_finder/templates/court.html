@@ -37,6 +37,23 @@
     <dt>예약</dt><dd><a href="{{ f.booking_url }}" target="_blank" rel="noopener">{{ f.booking_name }}</a> · <a href="{{ url_for('guide_page', slug=f.city_slug) }}">{{ city_keywords[f.city] }} 테니스장 예약 방법</a></dd>
   </dl>
 
+  {% if forecast and forecast.days %}
+  <h3>날씨 예보</h3>
+  {% if indoor %}<p class="muted">실내 코트라 비가 와도 칠 수 있습니다. 오가는 길 날씨를 참고하세요.</p>{% endif %}
+  <ul class="weather-days">
+    {% for d in forecast.days %}<li class="{% if d.weekday == 5 %}sat{% elif d.weekday == 6 %}sun{% endif %}">
+      <span class="wx-date">{{ d.label }}</span>
+      <span class="wx-icon" aria-hidden="true">{{ d.icon }}</span>
+      <span class="wx-name">{{ d.name }}</span>
+      {% if d.tmax is not none %}<span class="wx-temp">{{ d.tmin }}° / {{ d.tmax }}°</span>{% endif %}
+      {% if d.rain >= 0.1 %}<span class="wx-rain">비 {{ d.rain }}mm</span>{% endif %}
+      {% if d.windy %}<span class="wx-wind">바람 {{ d.wind }}m/s</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="muted wx-source">06~22시 기준 최저/최고 기온과 강수량{% if weather_approx %}, 시설이 있는 동의 대략적인 위치 기준{% endif %}입니다. 바람은 초속 6m 이상일 때만 적었습니다. 예보: <a href="https://www.met.no/en" target="_blank" rel="noopener">노르웨이 기상청(MET Norway)</a>, <a href="https://creativecommons.org/licenses/by/4.0/deed.ko" target="_blank" rel="noopener">CC BY 4.0</a> · {{ forecast.fetched }} 받음</p>
+  {% endif %}
+
   <h3>앞으로 2주 빈 시간</h3>
   <div id="court-availability" class="court-availability" data-facility="{{ f.name }}">
     <p class="muted">예약 현황을 불러오는 중입니다…</p>
@@ -44,6 +61,7 @@
   {% if f.day_only %}<p class="muted">경주시 통합예약은 날짜별로 빈 시간이 있는지만 공개해서, 몇 시가 비었는지는 예약 사이트에서 날짜를 눌러 확인해야 합니다.</p>{% endif %}
   {% if f.city == '서울 강남구' %}<p class="muted">☎ 표시는 온라인 접수(매월 25일까지)가 끝나 시설에 전화로 예약하는 빈 시간입니다.</p>{% endif %}
   {% if f.per_facility %}<p class="muted">부천 예약 사이트는 코트별이 아니라 시설 단위로 예약 가능 여부를 보여 줍니다.</p>{% endif %}
+  {% if forecast and not indoor and not f.day_only %}<p class="muted">🌧 그 시간에 비 예보 · 💨 바람이 초속 6m 이상 (시간별 예보가 나온 앞으로 2~3일만 표시)</p>{% endif %}
   <p><a class="cta" href="{{ url_for('index') }}">다른 날짜·시간으로 검색하기</a></p>
 
   {% if f.details.tips %}
@@ -76,6 +94,22 @@
 <script>
 (() => {
   const box = document.getElementById("court-availability");
+  const WX = {{ {"days": forecast.days if forecast else [], "hours": forecast.hours if forecast and not indoor else {}} | tojson }};
+  const wxDay = new Map(WX.days.map((d) => [d.date, d]));
+  // 빈 시간(시작~끝)에 걸친 시간별 예보에서 비·바람을 찾는다. 시간별 예보가 없는 날은 표시하지 않는다.
+  const slotWeather = (date, begin, end) => {
+    const from = +begin.slice(0, 2);
+    const to = +end.slice(0, 2) + (end.slice(3) === "00" ? 0 : 1);
+    let rain = 0, wind = 0, seen = false;
+    for (let h = from; h < (to > from ? to : 24); h++) {
+      const w = WX.hours[`${date} ${String(h).padStart(2, "0")}`];
+      if (!w) continue;
+      seen = true;
+      rain += w.rain || 0;
+      wind = Math.max(wind, w.wind || 0);
+    }
+    return seen ? { rain: Math.round(rain * 10) / 10, wind } : null;
+  };
   const DOW = ["일", "월", "화", "수", "목", "금", "토"];
   const pad = (n) => String(n).padStart(2, "0");
   const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -109,7 +143,14 @@
       for (const [date, byCourt] of byDate) {
         const d = new Date(date + "T00:00:00");
         const row = el("div", "avail-row" + (d.getDay() === 6 ? " sat" : d.getDay() === 0 ? " sun" : ""));
-        row.appendChild(el("div", "avail-date", `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`));
+        const dateBox = el("div", "avail-date", `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`);
+        const wd = wxDay.get(date);
+        if (wd && wd.icon) {
+          const wx = el("span", "avail-wx", `${wd.icon}${wd.tmax != null ? ` ${wd.tmax}°` : ""}`);
+          wx.title = `${wd.name}${wd.rain >= 0.1 ? `, 비 ${wd.rain}mm` : ""}`;
+          dateBox.appendChild(wx);
+        }
+        row.appendChild(dateBox);
         const courts = el("div", "avail-courts");
         const names = [...byCourt.keys()].sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
         for (const court of names) {
@@ -119,7 +160,12 @@
           const slots = el("div", "time-slots");
           byCourt.get(court).sort((a, b) => a.begin.localeCompare(b.begin)).forEach((s) => {
             const label = s.day_only ? "빈 시간 있음" : `${s.phone_only ? "☎ " : ""}${s.begin}~${s.end}`;
-            slots.appendChild(el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : ""), label));
+            const w = s.day_only ? null : slotWeather(date, s.begin, s.end);
+            const rainy = w && w.rain >= 0.1, windy = w && w.wind >= 6;
+            const chip = el("span", "time-slot" + (s.day_only ? " day-only" : "") + (s.phone_only ? " phone-only" : "") + (rainy ? " rainy" : ""),
+              `${label}${rainy ? " 🌧" : ""}${windy ? " 💨" : ""}`);
+            if (rainy || windy) chip.title = [rainy && `비 ${w.rain}mm 예보`, windy && `바람 최대 ${w.wind}m/s`].filter(Boolean).join(", ");
+            slots.appendChild(chip);
           });
           line.appendChild(slots);
           courts.appendChild(line);

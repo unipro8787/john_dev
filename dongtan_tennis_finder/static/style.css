@@ -1080,3 +1080,49 @@ footer p {
   margin-top: 4px;
   font-size: 0.85em;
 }
+
+/* ── 테니스장 페이지 날씨 예보 ── */
+.weather-days {
+  list-style: none;
+  margin: 8px 0 6px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 6px;
+}
+.weather-days li {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 8px 4px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 13px;
+}
+.weather-days .wx-date {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 600;
+}
+.weather-days .sat .wx-date { color: var(--sat); }
+.weather-days .sun .wx-date { color: var(--sun); }
+.weather-days .wx-icon { font-size: 22px; line-height: 1.3; }
+.weather-days .wx-name, .weather-days .wx-temp { color: var(--ink); }
+.weather-days .wx-rain { color: var(--sat); font-weight: 600; }
+.weather-days .wx-wind { color: var(--clay); }
+.wx-source { font-size: 12px; }
+.avail-wx {
+  display: block;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+.time-slot.rainy {
+  border-color: var(--sat);
+}
+@media (max-width: 420px) {
+  .weather-days { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+  .weather-days li { font-size: 12px; }
+}
