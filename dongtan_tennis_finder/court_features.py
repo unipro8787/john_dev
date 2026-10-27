@@ -15,7 +15,7 @@ from __future__ import annotations
 FEATURES: dict[str, dict] = {
     # 화성: 시설 안내에 "야외 코트". 바닥 재질은 안내에 없어서, 운영자가 직접 이용해 확인한 곳만 넣었다(2026-10-27).
     "여울공원 테니스장": {"indoor": False, "surface": "인조잔디", "light": True},     # 야간 조명 버튼 박스 안내, 바닥은 운영자 확인
-    "금반저류지 테니스장": {"indoor": False, "surface": None, "light": "1번 코트만 조명"},  # 2번 코트는 조명시설 없음
+    "금반저류지 테니스장": {"indoor": False, "surface": "하드", "light": "1번 코트만 조명"},  # 2번 코트는 조명시설 없음, 바닥은 운영자 확인
     "왕배산체육공원 테니스장": {"indoor": False, "surface": "하드", "light": True},   # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
     "중동 테니스장": {"indoor": False, "surface": "인조잔디", "light": True},         # 조명 OFF 스위치 안내, 바닥은 운영자 확인
     "돌모루 근린공원 테니스장": {"indoor": False, "surface": "하드", "light": True},  # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
