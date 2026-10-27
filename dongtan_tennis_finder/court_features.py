@@ -19,7 +19,7 @@ FEATURES: dict[str, dict] = {
     "왕배산체육공원 테니스장": {"indoor": False, "surface": "하드", "light": True},   # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
     "중동 테니스장": {"indoor": False, "surface": "인조잔디", "light": True},         # 조명 OFF 스위치 안내, 바닥은 운영자 확인
     "돌모루 근린공원 테니스장": {"indoor": False, "surface": "하드", "light": True},  # 조·야간(18~22시) 요금, 바닥·조명은 운영자 확인
-    "비봉체육공원 테니스장": {"indoor": False, "surface": None, "light": None},
+    "비봉체육공원 테니스장": {"indoor": False, "surface": "마사토", "light": None},    # 바닥은 운영자 확인
     "도원체육공원 테니스장": {"indoor": False, "surface": "인조잔디", "light": None},  # 온라인은 평일 12~17시뿐, 바닥은 운영자 확인
     "매송안보테마공원 테니스장": {"indoor": False, "surface": None, "light": None},    # 06~16시 운영
     "경기화성바이오밸리(마도) 테니스장": {"indoor": False, "surface": None, "light": True},  # 조간 조명 설정 안내
