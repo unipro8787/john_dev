@@ -138,6 +138,8 @@ def _summarize(payload: dict) -> dict:
             if p["start"] <= lo.replace(hour=13) < end or noon is None:
                 noon = sym
         if not temps and noon is None:
+            if offset == 0:
+                continue  # 22시가 지나 오늘 운영시간이 끝났다
             break  # 예보 범위를 넘었다
         if worst and rain >= RAIN_MM:
             name, icon, _ = worst

@@ -12,6 +12,7 @@
   <nav class="crumbs" aria-label="현재 위치"><a href="{{ url_for('index') }}">홈</a> › <a href="{{ url_for('courts_index') }}">테니스장 목록</a> › {{ f.city }} › {{ f.name }}</nav>
   <h2>{{ f.name }}</h2>
   <p class="muted">{% if f.alias %}다른 이름 {{ f.alias }} · {% endif %}{{ f.city }} {{ f.region }} · {% if f.per_facility %}시설 단위 예약{% else %}{{ f.courts | join(', ') }}{% endif %}</p>
+  {% if tags %}<p class="fac-tags">{% for t in tags %}<span class="fac-tag">{{ t }}</span>{% endfor %}</p>{% endif %}
 
   {% if f.photo %}<figure class="court-photo">
     <img src="{{ url_for('static', filename=f.photo) }}" alt="{{ f.name }} 코트 모습" loading="lazy" width="800" height="500">

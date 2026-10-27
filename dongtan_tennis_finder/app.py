@@ -33,6 +33,7 @@ import gangnam_client
 import gyeongju_client
 import hscity_client
 import weather
+from court_features import FEATURES, feature_tags
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
 from facility_details import DETAILS_CHECKED
 from articles import ARTICLES_WRITTEN, articles_for
@@ -50,6 +51,7 @@ AVAILABLE_STATUSES = {"AVAILABLE", "AVAILABLE_PHONE"}
 ALL_FACILITIES: dict[str, dict[str, int | str]] = {name: courts for c in CITIES for name, courts in c["facilities"].items()}
 
 app = Flask(__name__)
+assert set(FEATURES) == set(FACILITY_SLUGS), "court_features.FEATURES와 시설 목록이 다름"
 
 MAX_RANGE_DAYS = 45  # 한 번에 조회 가능한 최대 기간 (API 부하 방지)
 _TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -234,6 +236,7 @@ def court_page(slug: str):
     forecast = weather.forecast(*point) if point else None
     return render_template("court.html", f=f, jsonld=jsonld, faq_jsonld=faq_jsonld,
                            forecast=forecast, weather_approx=not info.get("lat"), indoor=_is_indoor(f),
+                           tags=feature_tags(f["name"]),
                            compare=compare_rows(same_city), highlights=highlights(f["name"], same_city),
                            collected=INFO_COLLECTED, details_checked=DETAILS_CHECKED)
 
@@ -393,6 +396,7 @@ def api_facilities():
                                 "courts": list(city["facilities"][f]),
                                 "note": FACILITY_NOTES.get(f),
                                 "url": url_for("court_page", slug=FACILITY_SLUGS[f]),
+                                "tags": feature_tags(f),
                             }
                             for f in names
                         ],

@@ -1139,3 +1139,26 @@ footer p {
   flex-basis: 100%;
   font-size: 12px;
 }
+
+/* 시설 특징 표시(실내/실외, 바닥, 조명) */
+.fac-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 0 8px;
+  vertical-align: 1px;
+}
+p.fac-tags {
+  display: flex;
+  margin: 4px 0 10px;
+}
+.fac-tag {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  padding: 0 5px;
+  white-space: nowrap;
+}

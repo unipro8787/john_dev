@@ -215,6 +215,7 @@
     const data = await res.json();
     cities = data.cities;
     facilityUrls = new Map(cities.flatMap((c) => c.regions.flatMap((r) => r.facilities.map((f) => [f.name, f.url]))));
+    facilityTags = new Map(cities.flatMap((c) => c.regions.flatMap((r) => r.facilities.map((f) => [f.name, f.tags || []]))));
     loadPrefs();
     renderCityTabs();
     renderFacilities();
@@ -227,6 +228,7 @@
   }
 
   let facilityUrls = new Map(); // 시설명 → 테니스장 안내 페이지
+  let facilityTags = new Map(); // 시설명 → ["실외", "하드", "야간 조명"] (공식 안내에 있는 것만)
 
   function dayInfo(dateStr) {
     const d = new Date(dateStr + "T00:00:00");
@@ -313,6 +315,12 @@
           name.appendChild(a);
         } else {
           name.textContent = facility;
+        }
+        const tags = facilityTags.get(facility) || [];
+        if (tags.length) {
+          const box = el("span", "fac-tags");
+          tags.forEach((t) => box.appendChild(el("span", "fac-tag", t)));
+          name.appendChild(box);
         }
         name.dataset.facility = facility;
         name.dataset.date = dateStr;
