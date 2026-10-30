@@ -131,7 +131,7 @@ python app.py
 2. [render.com](https://render.com) 가입 후 "New Web Service" → 이 GitHub 저장소 선택.
 3. **Root Directory**: `dongtan_tennis_finder`
 4. **Build Command**: `pip install -r requirements.txt`
-5. **Start Command**: `gunicorn app:app`
+5. **Start Command**: `gunicorn app:app` (스레드 수 같은 설정은 `gunicorn.conf.py`에서 자동으로 읽음)
 6. 배포 완료 후 발급되는 `https://xxxx.onrender.com` 주소를 아이폰 Safari에서 열고
    공유 버튼 → "홈 화면에 추가"로 저장.
 
