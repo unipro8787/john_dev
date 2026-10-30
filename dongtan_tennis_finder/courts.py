@@ -165,6 +165,38 @@ for _name, _tel in GANGNAM_PHONES.items():
 assert sorted(f for names in GANGNAM_REGIONS.values() for f in names) == sorted(GANGNAM_FACILITIES), "강남 REGIONS 어긋남"
 
 
+# ── 인천 남동구 공공체육시설예약(www.namdong.go.kr/tennisRental) 테니스장 (2026-10-30 기준, 7곳 21면, 모두 무료)
+# rentalScheduleMonth.do?inst_cd=… 화면의 "장소 선택" 목록에서 확인한 값. 값은 "inst_cd:rental_seq".
+# tc07은 목록에 없다(테니스장 메뉴에 나오는 7곳이 전부).
+# 남동근린공원·담방 2번 코트는 만 65세 이상 전용 코트(구민 우선 예약 기간에만, 남은 시간은 일반 예약으로 전환)
+
+
+def _nd_court(n: int) -> str:
+    return "2번 코트(65세 이상 우선)" if n == 2 else f"{n}번 코트"
+
+
+NAMDONG_FACILITIES: dict[str, dict[str, str]] = {
+    "남동근린공원 테니스장": {_nd_court(n): f"tc04:{9 + n}" for n in range(1, 7)},
+    "담방 테니스장": {_nd_court(n): f"tc03:{4 + n}" for n in range(1, 6)},
+    "논현포대근린공원 테니스장": {"1번 코트": "tc05:16", "2번 코트": "tc05:17"},
+    "늘솔길근린공원 테니스장": {"1번 코트": "tc06:18", "2번 코트": "tc06:19"},
+    "주적체육공원 테니스장": {"1번 코트": "tc08:23", "2번 코트": "tc08:24"},
+    "소래샛길 테니스장": {"1번 코트": "tc01:1", "2번 코트": "tc01:2"},
+    "3호 테니스장": {"1번 코트": "tc02:3", "2번 코트": "tc02:4"},
+}
+
+# 권역은 행정동 기준 (공식 안내 지도 좌표를 OpenStreetMap으로 찾아 본 동 이름)
+NAMDONG_REGIONS: dict[str, list[str]] = {
+    "논현·고잔": ["남동근린공원 테니스장", "논현포대근린공원 테니스장", "늘솔길근린공원 테니스장"],
+    "남촌·도림·수산": ["담방 테니스장", "주적체육공원 테니스장", "소래샛길 테니스장", "3호 테니스장"],
+}
+
+for _name in NAMDONG_FACILITIES:
+    FACILITY_NOTES[_name] = "무료"
+
+assert sorted(f for names in NAMDONG_REGIONS.values() for f in names) == sorted(NAMDONG_FACILITIES), "남동 REGIONS 어긋남"
+
+
 # ── 도시별 묶음. source는 어느 예약 시스템 클라이언트로 조회할지를 뜻한다.
 CITIES: list[dict] = [
     {"name": "화성시", "source": "hscity", "facilities": FACILITIES, "regions": REGIONS,
@@ -174,6 +206,8 @@ CITIES: list[dict] = [
     {"name": "경주시", "source": "gyeongju", "facilities": GYEONGJU_FACILITIES, "regions": GYEONGJU_REGIONS,
      "booking_url": "https://www.gyeongju.go.kr/reserve/sports_facilities/list.jsp", "booking_name": "경주시 통합예약",
      "day_only": True},
+    {"name": "인천 남동구", "source": "namdong", "facilities": NAMDONG_FACILITIES, "regions": NAMDONG_REGIONS,
+     "booking_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp", "booking_name": "남동구 공공체육시설예약"},
     {"name": "서울 강남구", "source": "gangnam", "facilities": GANGNAM_FACILITIES, "regions": GANGNAM_REGIONS,
      "booking_url": "https://life.gangnam.go.kr/fmcs/54", "booking_name": "강남구 통합예약",
      # 강남구 통합예약 이용약관에 "얻은 정보를 가공·판매하는 등 상업적으로 사용할 수 없다"는 조항이 있다.

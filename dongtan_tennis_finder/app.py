@@ -1,4 +1,4 @@
-# 화성시·부천시·경주시·서울 강남구 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
+# 화성시·부천시·경주시·인천 남동구·서울 강남구 공공 테니스코트 예약 가능 시간대 조회 웹앱 (Flask).
 # check_availability.py의 조회 로직을 그대로 재사용하고, 검색 UI + JSON API를 얹은 것.
 #
 # 로컬 실행: python app.py  (http://127.0.0.1:5000)
@@ -32,6 +32,7 @@ import bucheon_client
 import gangnam_client
 import gyeongju_client
 import hscity_client
+import namdong_client
 import weather
 from court_features import FEATURES, feature_tags
 from courts import CITIES, FACILITY_CITY, FACILITY_NOTES
@@ -46,6 +47,7 @@ FETCHERS = {
     "bucheon": bucheon_client.fetch_month,
     "gyeongju": gyeongju_client.fetch_month,  # 날짜 단위(begin/end 빈 슬롯)
     "gangnam": gangnam_client.fetch_month,    # 온라인 마감 뒤 남은 칸은 AVAILABLE_PHONE
+    "namdong": namdong_client.fetch_month,    # 요청을 하나씩 간격 두고 보냄(웹 방화벽)
 }
 AVAILABLE_STATUSES = {"AVAILABLE", "AVAILABLE_PHONE"}
 ALL_FACILITIES: dict[str, dict[str, int | str]] = {name: courts for c in CITIES for name, courts in c["facilities"].items()}
@@ -56,6 +58,8 @@ assert set(FEATURES) == set(FACILITY_SLUGS), "court_features.FEATURES와 시설 
 MAX_RANGE_DAYS = 45  # 한 번에 조회 가능한 최대 기간 (API 부하 방지)
 _TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 CACHE_TTL_SECONDS = 180  # 코트별 월 데이터 캐시 유지 시간
+# 원 사이트 부하에 더 조심해야 하는 곳은 더 오래 둔다 (남동구는 웹 방화벽이 연속 요청을 막는다)
+CACHE_TTL_BY_SOURCE = {"namdong": 600}
 
 FETCH_WORKERS = 6  # 코트별 조회를 동시에 보내는 수 (조회 시간 단축, 원 사이트 부하는 캐시로 제한)
 
@@ -75,7 +79,7 @@ def _cached_fetch_month(source: str, court_id: int | str, year: int, month: int)
     now = time.time()
     with _cache_lock:
         cached = _month_cache.get(key)
-    if cached and now - cached[0] < CACHE_TTL_SECONDS:
+    if cached and now - cached[0] < CACHE_TTL_BY_SOURCE.get(source, CACHE_TTL_SECONDS):
         return cached[1]
     slots = FETCHERS[source](_session(), court_id, year, month)
     with _cache_lock:
@@ -104,7 +108,7 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 SITE_NAME = "테니스코트 빈자리 찾기"
 POLICY_EFFECTIVE = "2026-10-18"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
-PAGES_UPDATED = "2026-10-27"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
+PAGES_UPDATED = "2026-10-30"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -122,7 +126,7 @@ def _adsense_client() -> str | None:
     return value if value and _ADSENSE_RE.match(value) else None
 
 
-SHORT_NAMES = {"화성시": "화성", "부천시": "부천", "경주시": "경주", "서울 강남구": "강남"}
+SHORT_NAMES = {"화성시": "화성", "부천시": "부천", "경주시": "경주", "인천 남동구": "인천 남동", "서울 강남구": "강남"}
 
 
 def _active_cities() -> list[dict]:
@@ -175,7 +179,7 @@ def _inject_site():
         "city_slugs": CITY_SLUGS,
         "facility_slugs": FACILITY_SLUGS,
         "city_keywords": CITY_KEYWORDS,
-        # 제목에 쓰는 검색용 지역 이름: 동탄·화성·부천·경주·서울 강남구
+        # 제목에 쓰는 검색용 지역 이름: 동탄·화성·부천·경주·인천 남동구·서울 강남구
         "area_kw": "·".join(CITY_KEYWORDS[c["name"]] for c in cities),
     }
 

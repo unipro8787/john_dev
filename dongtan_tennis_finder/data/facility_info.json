@@ -253,6 +253,90 @@
       "confirm_type": "심의승인",
       "receipt_period_example": "2026-10-12~2026-10-25",
       "source_url": "https://life.gangnam.go.kr/fmcs/501"
+    },
+    "남동근린공원 테니스장": {
+      "area": "인천 남동구 논현2동",
+      "lat": 37.409936,
+      "lng": 126.698188,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "담방 테니스장": {
+      "area": "인천 남동구 남촌도림동(수산동)",
+      "lat": 37.437836,
+      "lng": 126.736344,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "논현포대근린공원 테니스장": {
+      "area": "인천 남동구 논현2동",
+      "lat": 37.407385,
+      "lng": 126.709102,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "늘솔길근린공원 테니스장": {
+      "area": "인천 남동구 논현고잔동",
+      "lat": 37.387126,
+      "lng": 126.720226,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "주적체육공원 테니스장": {
+      "area": "인천 남동구 남촌도림동(도림동)",
+      "lat": 37.414182,
+      "lng": 126.72472,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "소래샛길 테니스장": {
+      "area": "인천 남동구 남촌도림동(수산동)",
+      "lat": 37.444772,
+      "lng": 126.731672,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+    },
+    "3호 테니스장": {
+      "area": "인천 남동구 남촌도림동",
+      "lat": 37.440243,
+      "lng": 126.734401,
+      "hours": "06:30~21:30",
+      "slot_unit": "2시간, 야간 8부는 1시간 30분",
+      "fee": "무료",
+      "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+      "operator": "인천 남동구청 체육진흥과",
+      "phone": "032-453-6270",
+      "source_url": "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
     }
   }
 }

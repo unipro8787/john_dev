@@ -39,6 +39,15 @@ FEATURES: dict[str, dict] = {
     "시민테니스장(북천)": {"indoor": False, "surface": "클레이", "light": None},
     "건천테니스장": {"indoor": False, "surface": None, "light": None},               # 06~18시 운영
     "외동생활체육공원 테니스장": {"indoor": False, "surface": None, "light": True},
+    # 인천 남동구: 공원 안 테니스장이고 "실내"가 붙은 곳이 없어 실외로 본다. 바닥 재질은 안내에 없다.
+    # 시간표에 "야간 8부 20:00~21:30"이 있어 야간 운영(조명 있음)으로 본다.
+    "남동근린공원 테니스장": {"indoor": False, "surface": None, "light": True},
+    "담방 테니스장": {"indoor": False, "surface": None, "light": True},
+    "논현포대근린공원 테니스장": {"indoor": False, "surface": None, "light": True},
+    "늘솔길근린공원 테니스장": {"indoor": False, "surface": None, "light": True},
+    "주적체육공원 테니스장": {"indoor": False, "surface": None, "light": True},
+    "소래샛길 테니스장": {"indoor": False, "surface": None, "light": True},
+    "3호 테니스장": {"indoor": False, "surface": None, "light": True},
     # 강남: 안내에 실내외·바닥·조명이 나오지 않는다.
     "봉은테니스장": {"indoor": None, "surface": None, "light": None},
     "포이테니스장": {"indoor": None, "surface": None, "light": None},

@@ -19,7 +19,9 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from courts import BUCHEON_FACILITIES, FACILITIES, GANGNAM_FACILITIES, GANGNAM_PHONES, GYEONGJU_FACILITIES  # noqa: E402
+from courts import (  # noqa: E402
+    BUCHEON_FACILITIES, FACILITIES, GANGNAM_FACILITIES, GANGNAM_PHONES, GYEONGJU_FACILITIES, NAMDONG_FACILITIES,
+)
 
 OUT = ROOT / "data" / "facility_info.json"
 S = requests.Session()
@@ -151,10 +153,53 @@ def gangnam(name: str, courts: dict[str, str]) -> dict:
     }
 
 
+ND_INFO_URL = "https://www.namdong.go.kr/main/area/physical/tennis_info.jsp"
+# 이용안내 "위치도" 칸의 시설 이름(우리 목록과 띄어쓰기·이름이 조금 다름)
+ND_PAGE_NAMES = {
+    "남동근린공원 테니스장": "남동근린공원 테니스장", "담방 테니스장": "담방테니스장", "3호 테니스장": "3호테니스장",
+    "소래샛길 테니스장": "소래샛길 테니스장", "늘솔길근린공원 테니스장": "늘솔길공원 테니스장",
+    "주적체육공원 테니스장": "주적체육공원 테니스장", "논현포대근린공원 테니스장": "논현포대근린공원 테니스장",
+}
+# 안내에 주소가 없어 지도 좌표를 OpenStreetMap에서 찾아 본 행정동 (2026-10-30)
+ND_AREAS = {
+    "남동근린공원 테니스장": "인천 남동구 논현2동", "논현포대근린공원 테니스장": "인천 남동구 논현2동",
+    "늘솔길근린공원 테니스장": "인천 남동구 논현고잔동", "담방 테니스장": "인천 남동구 남촌도림동(수산동)",
+    "소래샛길 테니스장": "인천 남동구 남촌도림동(수산동)", "주적체육공원 테니스장": "인천 남동구 남촌도림동(도림동)",
+    "3호 테니스장": "인천 남동구 남촌도림동",
+}
+_nd_page: str | None = None
+
+
+def namdong(name: str, courts: dict[str, str]) -> dict:
+    global _nd_page
+    if _nd_page is None:  # 7곳이 한 페이지에 다 있어 한 번만 받는다
+        _nd_page = S.get(ND_INFO_URL, timeout=30).text
+    loc = _nd_page[_nd_page.find("위치도"):]
+    lat = lng = None
+    for blk in loc.split('<div class="bl03">')[1:]:
+        title = re.search(r"<p>(.*?)</p>", blk)
+        ll = re.search(r"LatLng\(([\d.]+),\s*([\d.]+)\)", blk)
+        if title and ll and title.group(1).strip() == ND_PAGE_NAMES[name]:
+            lat, lng = float(ll.group(1)), float(ll.group(2))
+    return {
+        "area": ND_AREAS.get(name),
+        "lat": lat,
+        "lng": lng,
+        "hours": "06:30~21:30",
+        "slot_unit": "2시간, 야간 8부는 1시간 30분",
+        "fee": "무료",
+        "rules": "1인당 하루 1회, 한 달 10회 (참여자도 차감)",
+        "operator": "인천 남동구청 체육진흥과",
+        "phone": "032-453-6270",
+        "source_url": ND_INFO_URL,
+    }
+
+
 def main() -> None:
     info: dict[str, dict] = {}
     for fetch, facilities in ((hscity, FACILITIES), (bucheon, BUCHEON_FACILITIES),
-                              (gyeongju, GYEONGJU_FACILITIES), (gangnam, GANGNAM_FACILITIES)):
+                              (gyeongju, GYEONGJU_FACILITIES), (namdong, NAMDONG_FACILITIES),
+                              (gangnam, GANGNAM_FACILITIES)):
         for name, courts in facilities.items():
             try:
                 info[name] = {k: v for k, v in fetch(name, courts).items() if v not in (None, "")}
