@@ -10,7 +10,8 @@
 #   GOOGLE_SITE_VERIFICATION  구글 서치 콘솔 HTML 태그의 content 값
 #   NAVER_SITE_VERIFICATION   네이버 서치어드바이저 HTML 태그의 content 값
 #   ADSENSE_CLIENT            애드센스 게시자 ID (예: ca-pub-1234567890123456). 광고 스크립트와 ads.txt가 켜진다.
-#   GA_MEASUREMENT_ID         구글 애널리틱스(GA4) 측정 ID (예: G-ABC123DEF4). 방문 통계 코드와 개인정보처리방침의 통계 안내가 켜진다.
+#   GA_MEASUREMENT_ID         구글 애널리틱스(GA4) 측정 ID (예: G-ABC123DEF4). 없으면 tennisbinjari.kr로 들어온 요청에만
+#                             GA_DEFAULT_ID를 쓴다. 방문 통계 코드와 개인정보처리방침의 통계 안내가 켜진다.
 #   CONTACT_EMAIL             소개·개인정보처리방침에 표시할 문의 메일
 #   ALLOW_ADS_WITH            광고를 켠 상태에서도 보여 줄 "상업적 이용 제한" 지역의 source (쉼표 구분, 예: gangnam).
 #                             해당 기관에서 이용 허락을 받은 뒤에만 설정한다. 광고가 꺼져 있으면 의미 없음.
@@ -128,8 +129,14 @@ def _adsense_client() -> str | None:
     return value if value and _ADSENSE_RE.match(value) else None
 
 
+GA_DEFAULT_ID = "G-WELNH3NBWK"   # tennisbinjari.kr GA4 측정 ID (페이지 소스에 그대로 보이는 공개 값)
+GA_DEFAULT_HOST = "tennisbinjari.kr"
+
+
 def _ga_id() -> str | None:
-    value = _env("GA_MEASUREMENT_ID")
+    # 환경변수가 있으면 그 값을, 없으면 정식 도메인으로 들어온 요청에만 기본 ID를 쓴다
+    # (로컬 개발이나 onrender.com 주소로 본 화면이 통계에 섞이지 않게).
+    value = _env("GA_MEASUREMENT_ID") or (GA_DEFAULT_ID if request.host == GA_DEFAULT_HOST else None)
     return value if value and _GA_RE.match(value) else None
 
 

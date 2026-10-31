@@ -158,7 +158,7 @@ Render → 서비스 → **Environment** 에서 아래 값을 넣으면 코드 �
 | `SITE_URL` | 정식 도메인 (예: `https://dongtantennis.kr`) | canonical·사이트맵 주소, onrender.com → 정식 도메인 301 이동 |
 | `GOOGLE_SITE_VERIFICATION` | 서치 콘솔 "HTML 태그" 방식의 `content` 값 | 구글 소유 확인 메타 태그 |
 | `NAVER_SITE_VERIFICATION` | 네이버 서치어드바이저 "HTML 태그" 방식의 `content` 값 | 네이버 소유 확인 메타 태그 |
-| `GA_MEASUREMENT_ID` | 구글 애널리틱스(GA4) 측정 ID (`G-` + 영문·숫자) | 방문 통계 코드, 검색(`court_search`)·예약 사이트 이동(`booking_click`) 이벤트, 개인정보처리방침의 통계 안내 |
+| `GA_MEASUREMENT_ID` | 구글 애널리틱스(GA4) 측정 ID (`G-` + 영문·숫자). 없으면 `tennisbinjari.kr` 요청에만 `app.GA_DEFAULT_ID` 사용 | 방문 통계 코드, 검색(`court_search`)·예약 사이트 이동(`booking_click`) 이벤트, 개인정보처리방침의 통계 안내 |
 | `ADSENSE_CLIENT` | 애드센스 게시자 ID (`ca-pub-` + 숫자) | 광고 스크립트, `/ads.txt`, 개인정보처리방침의 광고 안내 |
 | `CONTACT_EMAIL` | 문의 받을 메일 | 소개·개인정보처리방침의 문의처 |
 | `ALLOW_ADS_WITH` | 허락받은 제한 지역 source (예: `gangnam`) | 광고를 켠 상태에서도 해당 지역 표시 |
