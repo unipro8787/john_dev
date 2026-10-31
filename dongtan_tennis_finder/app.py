@@ -10,6 +10,7 @@
 #   GOOGLE_SITE_VERIFICATION  구글 서치 콘솔 HTML 태그의 content 값
 #   NAVER_SITE_VERIFICATION   네이버 서치어드바이저 HTML 태그의 content 값
 #   ADSENSE_CLIENT            애드센스 게시자 ID (예: ca-pub-1234567890123456). 광고 스크립트와 ads.txt가 켜진다.
+#   GA_MEASUREMENT_ID         구글 애널리틱스(GA4) 측정 ID (예: G-ABC123DEF4). 방문 통계 코드와 개인정보처리방침의 통계 안내가 켜진다.
 #   CONTACT_EMAIL             소개·개인정보처리방침에 표시할 문의 메일
 #   ALLOW_ADS_WITH            광고를 켠 상태에서도 보여 줄 "상업적 이용 제한" 지역의 source (쉼표 구분, 예: gangnam).
 #                             해당 기관에서 이용 허락을 받은 뒤에만 설정한다. 광고가 꺼져 있으면 의미 없음.
@@ -107,9 +108,10 @@ def _fetch_range_cached(source: str, court_id: int | str, start: date, end: date
 
 
 SITE_NAME = "테니스코트 빈자리 찾기"
-POLICY_EFFECTIVE = "2026-10-18"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
+POLICY_EFFECTIVE = "2026-10-31"  # 개인정보처리방침 시행일 (방침을 바꾸면 함께 갱신)
 PAGES_UPDATED = "2026-10-30"     # 사이트맵 lastmod (페이지 내용을 바꾸면 함께 갱신)
 _ADSENSE_RE = re.compile(r"^ca-pub-\d{10,20}$")
+_GA_RE = re.compile(r"^G-[A-Z0-9]{6,16}$")
 
 
 def _env(name: str) -> str | None:
@@ -124,6 +126,11 @@ def _site_url() -> str:
 def _adsense_client() -> str | None:
     value = _env("ADSENSE_CLIENT")
     return value if value and _ADSENSE_RE.match(value) else None
+
+
+def _ga_id() -> str | None:
+    value = _env("GA_MEASUREMENT_ID")
+    return value if value and _GA_RE.match(value) else None
 
 
 SHORT_NAMES = {"화성시": "화성", "부천시": "부천", "경주시": "경주", "인천 남동구": "인천 남동", "서울 강남구": "강남"}
@@ -164,6 +171,9 @@ def _inject_site():
         "google_site_verification": _env("GOOGLE_SITE_VERIFICATION"),
         "naver_site_verification": _env("NAVER_SITE_VERIFICATION"),
         "adsense_client": _adsense_client(),
+        "ga_id": _ga_id(),
+        # 예약 사이트로 나가는 클릭을 지역별로 세려고 (호스트 → 지역 이름)
+        "booking_hosts": {urlparse(c["booking_url"]).netloc: c["name"] for c in cities},
         "contact_email": _env("CONTACT_EMAIL"),
         "cities": cities,
         "facility_notes": FACILITY_NOTES,

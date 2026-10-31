@@ -35,6 +35,22 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 {% if adsense_client %}<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client }}" crossorigin="anonymous"></script>{% endif %}
+{% if ga_id %}<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag("js", new Date());
+  gtag("config", "{{ ga_id }}");
+  // 공식 예약 사이트로 나가는 클릭을 지역별로 센다 (빈자리를 보고 실제 예약하러 간 비율)
+  const BOOKING_HOSTS = {{ booking_hosts|tojson }};
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[href]");
+    if (!a) return;
+    let host;
+    try { host = new URL(a.href).host; } catch (err) { return; }
+    if (BOOKING_HOSTS[host]) gtag("event", "booking_click", { city: BOOKING_HOSTS[host], page: location.pathname });
+  });
+</script>{% endif %}
 {% block head %}{% endblock %}
 </head>
 <body>

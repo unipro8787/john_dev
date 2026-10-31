@@ -449,7 +449,17 @@
     }
   }
 
-  searchBtn.addEventListener("click", runSearch);
+  searchBtn.addEventListener("click", () => {
+    // 방문 통계(GA4)가 켜져 있을 때만: 어느 지역을 얼마나 찾는지 센다. 처음 열 때 자동 검색은 세지 않는다.
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "court_search", {
+        city: currentCity,
+        facility_count: selectedFacilities.size,
+        time_range: timeStartInput.value ? `${timeStartInput.value}~${timeEndInput.value}` : "전체",
+      });
+    }
+    runSearch();
+  });
 
   (async () => {
     await loadFacilities();
